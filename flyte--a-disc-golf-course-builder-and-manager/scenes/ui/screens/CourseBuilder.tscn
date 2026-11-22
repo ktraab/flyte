@@ -1,0 +1,626 @@
+[gd_scene format=3 uid="uid://bvdb6ttqic7rh"]
+
+[ext_resource type="Script" uid="uid://cee3h8f64o03k" path="res://scenes/ui/screens/CourseBuilder.gd" id="1_cbgd"]
+
+[sub_resource type="StyleBoxFlat" id="SBF_bar"]
+bg_color = Color(0.09, 0.12, 0.09, 0.97)
+
+[sub_resource type="StyleBoxFlat" id="SBF_panel"]
+bg_color = Color(0.08, 0.11, 0.08, 0.94)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="SBF_overlay"]
+bg_color = Color(0.10, 0.13, 0.10, 0.98)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="CourseBuilder" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_cbgd")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+offset_bottom = 52.0
+theme_override_styles/panel = SubResource("SBF_bar")
+
+[node name="TopHBox" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TogglePanelBtn" type="Button" parent="TopBar/TopHBox"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+tooltip_text = "Show/hide stats"
+text = "="
+
+[node name="BackButton" type="Button" parent="TopBar/TopHBox"]
+custom_minimum_size = Vector2(110, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1.0, 0.5, 1.0)
+text = "Play >"
+
+[node name="CourseNameLabel" type="Label" parent="TopBar/TopHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.88, 0.96, 0.88, 1)
+text = "Course Builder"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ManageHolesBtn" type="Button" parent="TopBar/TopHBox"]
+custom_minimum_size = Vector2(140, 44)
+layout_mode = 2
+text = "Manage Holes"
+
+[node name="SaveButton" type="Button" parent="TopBar/TopHBox"]
+custom_minimum_size = Vector2(80, 44)
+layout_mode = 2
+text = "Save"
+
+[node name="UndoButton" type="Button" parent="TopBar/TopHBox"]
+custom_minimum_size = Vector2(80, 44)
+layout_mode = 2
+tooltip_text = "Undo last paint  (Ctrl+Z)"
+text = "↩ Undo"
+
+[node name="EraseButton" type="Button" parent="TopBar/TopHBox"]
+custom_minimum_size = Vector2(88, 44)
+layout_mode = 2
+tooltip_text = "Erase tool — paint grass (Delete key when hovering)"
+text = "✕ Erase"
+
+[node name="BalanceLabel" type="Label" parent="TopBar/TopHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(120, 0)
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.85, 0.3, 1.0)
+text = "$10,000"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="BottomBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -104.0
+theme_override_styles/panel = SubResource("SBF_bar")
+
+[node name="BarMargin" type="MarginContainer" parent="BottomBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="BarVBox" type="VBoxContainer" parent="BottomBar/BarMargin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TabRow" type="HBoxContainer" parent="BottomBar/BarMargin/BarVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TabTerrain" type="Button" parent="BottomBar/BarMargin/BarVBox/TabRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(90, 44)
+toggle_mode = true
+button_pressed = true
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.55, 0.78, 0.55, 1)
+text = "Terrain"
+
+[node name="TabObjects" type="Button" parent="BottomBar/BarMargin/BarVBox/TabRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(85, 44)
+toggle_mode = true
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.6, 0.72, 0.92, 1)
+text = "Objects"
+
+[node name="TabFacilities" type="Button" parent="BottomBar/BarMargin/BarVBox/TabRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(95, 44)
+toggle_mode = true
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.90, 0.72, 0.40, 1)
+text = "Facilities"
+
+[node name="TabTerraform" type="Button" parent="BottomBar/BarMargin/BarVBox/TabRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(90, 44)
+toggle_mode = true
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.92, 0.76, 0.5, 1)
+text = "Terraform"
+
+[node name="TabDecor" type="Button" parent="BottomBar/BarMargin/BarVBox/TabRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(75, 44)
+toggle_mode = true
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.78, 0.60, 0.90, 1)
+text = "Decor"
+
+[node name="TabSelect" type="Button" parent="BottomBar/BarMargin/BarVBox/TabRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(75, 44)
+toggle_mode = true
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.80, 0.88, 1.0, 1)
+text = "Select"
+
+[node name="ToolHBox" type="HBoxContainer" parent="BottomBar/BarMargin/BarVBox"]
+layout_mode = 2
+theme_override_constants/separation = 3
+size_flags_horizontal = 3
+
+[node name="TerrainGroup" type="HBoxContainer" parent="BottomBar/BarMargin/BarVBox/ToolHBox"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="GrassBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerrainGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Grass\nFree"
+
+[node name="FairwayBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerrainGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Fairway\n$45"
+
+[node name="RoughBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerrainGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Rough\n$15"
+
+[node name="PathBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerrainGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Path\n$25"
+
+[node name="WaterBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerrainGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Water\nFree"
+
+[node name="SandBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerrainGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Sand\n$20"
+
+[node name="RockBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerrainGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Rock\n$10"
+
+[node name="OBBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerrainGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "OB Zone\nFree"
+
+[node name="ObjectsGroup" type="HBoxContainer" parent="BottomBar/BarMargin/BarVBox/ToolHBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="TreeBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/ObjectsGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Trees\n$60"
+
+[node name="TeeBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/ObjectsGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Tee Box\n$250"
+
+[node name="BasketBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/ObjectsGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Basket\n$450"
+
+[node name="EntranceBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/ObjectsGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Entry Gate\n$500"
+
+[node name="FacilitiesGroup" type="HBoxContainer" parent="BottomBar/BarMargin/BarVBox/ToolHBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="ParkingBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/FacilitiesGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Parking\n$1,500"
+
+[node name="RestroomBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/FacilitiesGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Restroom\n$3,000"
+
+[node name="FoodStandBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/FacilitiesGroup"]
+custom_minimum_size = Vector2(90, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Food Stand\n$2,500"
+
+[node name="ProShopBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/FacilitiesGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Pro Shop\n$8,000"
+
+[node name="TerraformGroup" type="HBoxContainer" parent="BottomBar/BarMargin/BarVBox/ToolHBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="RaiseBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerraformGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Raise\n$10"
+
+[node name="LowerBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/TerraformGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Lower\n$10"
+
+[node name="DecorGroup" type="HBoxContainer" parent="BottomBar/BarMargin/BarVBox/ToolHBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="BenchBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/DecorGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Bench\n$150"
+
+[node name="FlowerBedBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/DecorGroup"]
+custom_minimum_size = Vector2(90, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Flower Bed\n$80"
+
+[node name="SculptureBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/DecorGroup"]
+custom_minimum_size = Vector2(90, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Sculpture\n$600"
+
+[node name="LampPostBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/DecorGroup"]
+custom_minimum_size = Vector2(90, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Lamp Post\n$120"
+
+[node name="SignBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/DecorGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Sign\n$40"
+
+[node name="GardenBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/DecorGroup"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Garden\n$60"
+
+[node name="SelectGroup" type="HBoxContainer" parent="BottomBar/BarMargin/BarVBox/ToolHBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="SelectBtn" type="Button" parent="BottomBar/BarMargin/BarVBox/ToolHBox/SelectGroup"]
+custom_minimum_size = Vector2(92, 56)
+layout_mode = 2
+toggle_mode = true
+text = "Select / Edit"
+
+[node name="LeftStatsPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_bottom = 1.0
+offset_top = 52.0
+offset_right = 210.0
+offset_bottom = -104.0
+theme_override_styles/panel = SubResource("SBF_panel")
+
+[node name="StatsMargin" type="MarginContainer" parent="LeftStatsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="StatsVBox" type="VBoxContainer" parent="LeftStatsPanel/StatsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StatsTitleLabel" type="Label" parent="LeftStatsPanel/StatsMargin/StatsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.55, 0.78, 0.55, 1)
+text = "COURSE STATS"
+horizontal_alignment = 1
+
+[node name="CourseStatsContainer" type="VBoxContainer" parent="LeftStatsPanel/StatsMargin/StatsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="StatsLabel" type="Label" parent="LeftStatsPanel/StatsMargin/StatsVBox/CourseStatsContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 0.92, 1)
+text = "Holes: 0
+Total Par: 0
+Total Distance: 0m"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TipLabel" type="Label" parent="LeftStatsPanel/StatsMargin/StatsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.5, 0.62, 0.5, 1)
+text = "Click tiles to paint.
+WASD / arrows to pan.
+Scroll / pinch to zoom."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="LeftPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = 52.0
+offset_bottom = -104.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("SBF_panel")
+
+[node name="LeftMargin" type="MarginContainer" parent="LeftPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="LeftVBox" type="VBoxContainer" parent="LeftPanel/LeftMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HoleNumContainer" type="VBoxContainer" parent="LeftPanel/LeftMargin/LeftVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HoleNumLabel" type="Label" parent="LeftPanel/LeftMargin/LeftVBox/HoleNumContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.6, 0.78, 0.6, 1)
+text = "HOLE NUMBER"
+horizontal_alignment = 1
+
+[node name="HoleNumSpin" type="SpinBox" parent="LeftPanel/LeftMargin/LeftVBox/HoleNumContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+min_value = 1.0
+max_value = 18.0
+value = 1.0
+alignment = 1
+
+[node name="OrientationContainer" type="VBoxContainer" parent="LeftPanel/LeftMargin/LeftVBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="OrientLabel" type="Label" parent="LeftPanel/LeftMargin/LeftVBox/OrientationContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.6, 0.78, 0.6, 1)
+text = "TEE FACING"
+horizontal_alignment = 1
+
+[node name="OrientBtns" type="GridContainer" parent="LeftPanel/LeftMargin/LeftVBox/OrientationContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="FaceNBtn" type="Button" parent="LeftPanel/LeftMargin/LeftVBox/OrientationContainer/OrientBtns"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "N"
+
+[node name="FaceEBtn" type="Button" parent="LeftPanel/LeftMargin/LeftVBox/OrientationContainer/OrientBtns"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "E"
+
+[node name="FaceSBtn" type="Button" parent="LeftPanel/LeftMargin/LeftVBox/OrientationContainer/OrientBtns"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "S"
+
+[node name="FaceWBtn" type="Button" parent="LeftPanel/LeftMargin/LeftVBox/OrientationContainer/OrientBtns"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "W"
+
+[node name="TreeVariantContainer" type="VBoxContainer" parent="LeftPanel/LeftMargin/LeftVBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TreeVariantLabel" type="Label" parent="LeftPanel/LeftMargin/LeftVBox/TreeVariantContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.6, 0.78, 0.6, 1)
+text = "TREE TYPE"
+horizontal_alignment = 1
+
+[node name="TreeVariantOption" type="OptionButton" parent="LeftPanel/LeftMargin/LeftVBox/TreeVariantContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+
+[node name="TreeSizeContainer" type="VBoxContainer" parent="LeftPanel/LeftMargin/LeftVBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TreeSizeLabel" type="Label" parent="LeftPanel/LeftMargin/LeftVBox/TreeSizeContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.6, 0.78, 0.6, 1)
+text = "TREE SIZE"
+horizontal_alignment = 1
+
+[node name="TreeSizeOption" type="OptionButton" parent="LeftPanel/LeftMargin/LeftVBox/TreeSizeContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+
+[node name="FacilityColorContainer" type="VBoxContainer" parent="LeftPanel/LeftMargin/LeftVBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="FacilityColorLabel" type="Label" parent="LeftPanel/LeftMargin/LeftVBox/FacilityColorContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.6, 0.78, 0.6, 1)
+text = "COLOR"
+horizontal_alignment = 1
+
+[node name="FacilityColorOption" type="OptionButton" parent="LeftPanel/LeftMargin/LeftVBox/FacilityColorContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+
+[node name="RouteEditContainer" type="VBoxContainer" parent="LeftPanel/LeftMargin/LeftVBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="RouteEditLabel" type="Label" parent="LeftPanel/LeftMargin/LeftVBox/RouteEditContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.6, 0.78, 0.6, 1)
+text = "ROUTE"
+horizontal_alignment = 1
+
+[node name="EditRouteBtn" type="Button" parent="LeftPanel/LeftMargin/LeftVBox/RouteEditContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+toggle_mode = true
+text = "Edit Waypoints"
+
+[node name="ClearRouteBtn" type="Button" parent="LeftPanel/LeftMargin/LeftVBox/RouteEditContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Clear Waypoints"
+
+[node name="HoleManagerOverlay" type="Control" parent="."]
+visible = false
+layout_mode = 1
+z_index = 100
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="OverlayBG" type="ColorRect" parent="HoleManagerOverlay"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.72)
+
+[node name="OverlayPanel" type="PanelContainer" parent="HoleManagerOverlay"]
+layout_mode = 1
+anchor_left = 0.05
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.95
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("SBF_overlay")
+
+[node name="OverlayMargin" type="MarginContainer" parent="HoleManagerOverlay/OverlayPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="OverlayVBox" type="VBoxContainer" parent="HoleManagerOverlay/OverlayPanel/OverlayMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HMHeader" type="HBoxContainer" parent="HoleManagerOverlay/OverlayPanel/OverlayMargin/OverlayVBox"]
+layout_mode = 2
+
+[node name="HMTitle" type="Label" parent="HoleManagerOverlay/OverlayPanel/OverlayMargin/OverlayVBox/HMHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.88, 0.96, 0.88, 1)
+text = "HOLE MANAGER"
+vertical_alignment = 1
+
+[node name="HMCloseBtn" type="Button" parent="HoleManagerOverlay/OverlayPanel/OverlayMargin/OverlayVBox/HMHeader"]
+custom_minimum_size = Vector2(90, 44)
+layout_mode = 2
+text = "Close"
+
+[node name="HMScroll" type="ScrollContainer" parent="HoleManagerOverlay/OverlayPanel/OverlayMargin/OverlayVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HolesVBox" type="VBoxContainer" parent="HoleManagerOverlay/OverlayPanel/OverlayMargin/OverlayVBox/HMScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="HMFooter" type="HBoxContainer" parent="HoleManagerOverlay/OverlayPanel/OverlayMargin/OverlayVBox"]
+layout_mode = 2
+
+[node name="HMTotalLabel" type="Label" parent="HoleManagerOverlay/OverlayPanel/OverlayMargin/OverlayVBox/HMFooter"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.92, 0.85, 1)
+text = "Holes: 0  |  Total Par: 0  |  Total Distance: 0m"
+vertical_alignment = 1

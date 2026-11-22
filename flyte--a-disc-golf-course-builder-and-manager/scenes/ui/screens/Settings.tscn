@@ -1,0 +1,652 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/screens/Settings.gd" id="1_stgd"]
+
+[node name="Settings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_stgd")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+mouse_filter = 0
+
+[node name="CenterBox" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(600, 600)
+
+[node name="Margin" type="MarginContainer" parent="CenterBox/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 20
+
+[node name="MainVBox" type="VBoxContainer" parent="CenterBox/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="CenterBox/Panel/Margin/MainVBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SETTINGS"
+vertical_alignment = 1
+
+[node name="CloseBtn" type="Button" parent="CenterBox/Panel/Margin/MainVBox/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 0)
+text = "✕ Close"
+
+[node name="TabContainer" type="TabContainer" parent="CenterBox/Panel/Margin/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Audio" type="VBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="MasterRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MasterLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/MasterRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Master Volume"
+vertical_alignment = 1
+
+[node name="MasterSlider" type="HSlider" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/MasterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="MasterValLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/MasterRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(46, 0)
+text = "100%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MusicRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MusicLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/MusicRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Music Volume"
+vertical_alignment = 1
+
+[node name="MusicSlider" type="HSlider" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/MusicRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 0.7
+
+[node name="MusicValLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/MusicRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(46, 0)
+text = "70%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SFXRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SFXLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/SFXRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "SFX Volume"
+vertical_alignment = 1
+
+[node name="SFXSlider" type="HSlider" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/SFXRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="SFXValLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/SFXRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(46, 0)
+text = "100%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Controls" type="ScrollContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ControlsVBox" type="VBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="CamHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+text = "CAMERA"
+theme_override_font_sizes/font_size = 13
+
+[node name="PanRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="PanAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/PanRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pan Camera"
+
+[node name="PanKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/PanRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "WASD  /  Arrow Keys  /  Middle-drag"
+horizontal_alignment = 2
+
+[node name="ZoomRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="ZoomAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/ZoomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Zoom"
+
+[node name="ZoomKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/ZoomRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "Scroll Wheel  /  Pinch (mobile)"
+horizontal_alignment = 2
+
+[node name="Sep1" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="BuildHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+text = "COURSE BUILDER"
+theme_override_font_sizes/font_size = 13
+
+[node name="PaintRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="PaintAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/PaintRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Paint Tile"
+
+[node name="PaintKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/PaintRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "Left Click  /  Tap"
+horizontal_alignment = 2
+
+[node name="DragRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="DragAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/DragRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Paint Multiple Tiles"
+
+[node name="DragKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/DragRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "Hold + Drag"
+horizontal_alignment = 2
+
+[node name="ToolRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="ToolAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/ToolRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Select Tool"
+
+[node name="ToolKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/ToolRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "Left Panel Buttons"
+horizontal_alignment = 2
+
+[node name="Sep2" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="GenHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+text = "GENERAL"
+theme_override_font_sizes/font_size = 13
+
+[node name="PauseRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="PauseAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/PauseRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pause / Resume"
+
+[node name="PauseKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/PauseRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "Escape  /  Pause Button"
+horizontal_alignment = 2
+
+[node name="SaveRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="SaveAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/SaveRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save Course"
+
+[node name="SaveKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/SaveRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "Save Button (top-right)"
+horizontal_alignment = 2
+
+[node name="MenuRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="MenuAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/MenuRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Return to Main Menu"
+
+[node name="MenuKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/MenuRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "< Menu Button"
+horizontal_alignment = 2
+
+[node name="Sep3" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="TestHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1.0, 0.5, 1.0)
+text = "TEST MODE"
+theme_override_font_sizes/font_size = 13
+
+[node name="ThrowRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="ThrowAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/ThrowRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Aim + Throw Disc"
+
+[node name="ThrowKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/ThrowRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "Left Click"
+horizontal_alignment = 2
+
+[node name="DiscSelectRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="DiscSelectAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/DiscSelectRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Select Disc Type"
+
+[node name="DiscSelectKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/DiscSelectRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "1 Putter  2 Mid  3 Fairway  4 Driver"
+horizontal_alignment = 2
+
+[node name="ExitTestRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox"]
+layout_mode = 2
+
+[node name="ExitTestAction" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/ExitTestRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Exit Test Mode"
+
+[node name="ExitTestKey" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Controls/ControlsVBox/ExitTestRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+text = "Escape"
+horizontal_alignment = 2
+
+[node name="Mechanics" type="ScrollContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MechVBox" type="VBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="RatingHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "COURSE RATING  (★ Stars)"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="RatingText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Each hole gets 0–5 stars based on: distance (longer = better), fairway coverage, hazards (water & trees add excitement), variety (rough terrain), and restroom proximity. Your overall course rating is the average across all holes. Higher ratings attract better players and increase income."
+
+[node name="Sep1" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="HappinessHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "PLAYER HAPPINESS"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="HappinessText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Happiness (0–100%) = course quality (50%) + restrooms (20%) + food stands (15%) + pro shop (15%). Low happiness means fewer members, VIPs skip your course, and income drops. Build amenities and keep the course in good condition to maintain high happiness."
+
+[node name="Sep2" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="TournamentsHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "TOURNAMENTS"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="TournamentsText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Requires 6+ holes and ≥ 2.0 star rating. Runs for 90 seconds — extra players flood the course and spend heavily. Prize = $500 + (holes × $80) + (rating × $200). 8-minute cooldown between events. Great for burst income."
+
+[node name="Sep3" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="EventsHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "SPECIAL EVENTS"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="EventsText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Discount Day: free, temporarily boosts visit rate. Pro Invitational: $500, needs a Pro Shop, raises prestige. Night Golf: $200, needs Restroom + Food Stand. Charity Round: $300, 2-day, needs 9+ holes — awards prestige on completion. Each event has a cooldown."
+
+[node name="Sep4" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="VIPHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "VIPs & TOURING PROS"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="VIPText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "VIPs appear when happiness ≥ 60% (12% base chance, +5% per Disc Pro staff member). They pay 3× the green fee and carry a gold dot. VIP satisfaction affects prestige. Having a Pro Shop on course is strongly recommended to attract touring pros."
+
+[node name="Sep5" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="StaffHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "STAFF"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="StaffText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Groundskeeper: slows course condition decay. Disc Pro: boosts VIP chance and applies an income multiplier. Concessions Worker: adds passive food income (requires Food Stands). All staff have 3 upgrade tiers — upgrade via the Staff Dashboard for greater effect."
+
+[node name="Sep6" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="ConditionHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "COURSE CONDITION"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="ConditionText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Condition decays 1%/day naturally. Below 75% it reduces income (down to 60% at 0%). Groundskeepers slow the decay. Use 'Repair Course' (Staff panel) to restore to 100% — costs $500 + $100 per hole. Keep condition above 75% for full income."
+
+[node name="Sep7" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="PrestigeHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "PRESTIGE"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="PrestigeText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Prestige (0–100) unlocks World Circuit destinations. Formula: course rating 35% + happiness 30% + facilities (restroom/food/pro shop) 20% + tournament activity 10% + goals completed 5%. Tiers: Local Legend → Regional → National → World Class. Higher tiers unlock better World Circuit courses."
+
+[node name="Sep8" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="PartiesHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "PLAYER PARTIES"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="PartiesText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Players arrive in parties of 1–4. Each party member pays their own green fee. Larger parties generate more revenue per visit. Parties are more common with higher marketing spend and happiness. Each player in the party has an individual skill level."
+
+[node name="Sep9" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="NeedsHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "PLAYER NEEDS"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="NeedsText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Every NPC tracks hunger, thirst, and bathroom need. Meters drain while playing. If any meter maxes out with no nearby facility, the player leaves early — you lose the rest of their green fee. Food Stands satisfy hunger and thirst. Restrooms satisfy bathroom need. Place facilities near busy holes for best coverage."
+
+[node name="Sep10" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="DecorHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "DECOR & AESTHETICS"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="DecorText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Bench, Flower Bed, and Sculpture give a small per-hole bonus when placed nearby (binary — one piece is the same as two). Up to 20 pieces globally count toward your happiness and rating score. Lamp Post, Sign, and Garden are purely cosmetic — no gameplay effect, just visual atmosphere."
+
+[node name="Sep11" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="XPHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "XP & LEVELING"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="XPText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Earn XP to level from Rookie (L1) to Hall of Fame (L10). Sources: 1 XP per tile placed, 8 XP per hole an NPC plays, +15 XP bonus when a VIP completes a round, 150 XP for purchasing a World Circuit course, 75 XP per goal completed. Your level and title are shown in the HUD."
+
+[node name="Sep12" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="GoalsHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "GOALS"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="GoalsText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "12 progressive goals auto-track milestones: first hole complete, revenue targets, player count, star rating, and more. Completing a goal pays a cash reward plus 75 XP. Only one goal is active at a time — check progress in the Goals panel. Goals persist across sessions."
+
+[node name="Sep13" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+
+[node name="EmpireHeader" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+text = "WORLD CIRCUIT & EMPIRE"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.85, 1.0, 1.0)
+
+[node name="EmpireText" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Mechanics/MechVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Buy real-world courses (Maple Ridge, Winthrop Gold, Idlewild, Disc Side of Heaven, Krokhol, Ale White) with Empire Balance — funds shared across all your locations. Each course runs its own economy; income accrues in the background while you manage other courses. Affiliate shops (Disc Depot, Bag Shack, WDGA HQ, Bromez) unlock in tiers for passive empire income."
+
+[node name="Graphics" type="VBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="PresetRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PresetLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/PresetRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Quality Preset"
+vertical_alignment = 1
+
+[node name="PresetOption" type="OptionButton" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/PresetRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GfxSep" type="HSeparator" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics"]
+layout_mode = 2
+
+[node name="CustomSection" type="VBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics"]
+layout_mode = 2
+visible = false
+theme_override_constants/separation = 10
+
+[node name="GlowRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="GlowLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/GlowRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Bloom / Glow"
+vertical_alignment = 1
+
+[node name="GlowCheck" type="CheckButton" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/GlowRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Enabled"
+
+[node name="ShadowsRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ShadowsLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/ShadowsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Shadows"
+vertical_alignment = 1
+
+[node name="ShadowsOption" type="OptionButton" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/ShadowsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SkyRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SkyLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/SkyRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Sky"
+vertical_alignment = 1
+
+[node name="SkyOption" type="OptionButton" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/SkyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FpsRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FpsLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/FpsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "FPS Limit"
+vertical_alignment = 1
+
+[node name="FpsOption" type="OptionButton" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/FpsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FlagsRow" type="HBoxContainer" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FlagsLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/FlagsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Flag Animation"
+vertical_alignment = 1
+
+[node name="FlagsCheck" type="CheckButton" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/FlagsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Enabled"
+
+[node name="InfoLbl" type="Label" parent="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics"]
+layout_mode = 2
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1.0)
+text = "Low: best performance — 75% render scale, shadows off, no grass tufts, procedural sky, 30 FPS cap (picked automatically on phones and basic laptops). Medium: balanced — full resolution, HDRI sky, light shadows, 60 FPS. High: full quality — bloom, deep shadows. Custom: mix and match. Trees are always drawn at full detail."
+
+[connection signal="pressed" from="CenterBox/Panel/Margin/MainVBox/Header/CloseBtn" to="." method="_on_back_pressed"]
+[connection signal="value_changed" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/MasterRow/MasterSlider" to="." method="_on_master_changed"]
+[connection signal="value_changed" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/MusicRow/MusicSlider" to="." method="_on_music_changed"]
+[connection signal="value_changed" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Audio/SFXRow/SFXSlider" to="." method="_on_sfx_changed"]
+[connection signal="item_selected" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/PresetRow/PresetOption" to="." method="_on_preset_selected"]
+[connection signal="toggled" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/GlowRow/GlowCheck" to="." method="_on_glow_toggled"]
+[connection signal="item_selected" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/ShadowsRow/ShadowsOption" to="." method="_on_shadows_selected"]
+[connection signal="item_selected" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/SkyRow/SkyOption" to="." method="_on_sky_selected"]
+[connection signal="item_selected" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/FpsRow/FpsOption" to="." method="_on_fps_selected"]
+[connection signal="toggled" from="CenterBox/Panel/Margin/MainVBox/TabContainer/Graphics/CustomSection/FlagsRow/FlagsCheck" to="." method="_on_flags_toggled"]

@@ -1,0 +1,40 @@
+# Godot 4 generated files
+# (*.uid and *.import ARE committed — Godot 4.4+ recommends it; they keep
+#  resource IDs and per-asset import settings stable across machines)
+.godot/
+
+# Godot export templates (large binaries)
+export_templates/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# IDE / editor folders
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Build output
+build/
+dist/
+export/
+
+# GodotSteam — install separately, not committed
+flyte--a-disc-golf-course-builder-and-manager/addons/godotsteam/
+
+# Secrets — never commit
+*.env
+.env.*
+supabase_keys.txt
+
+# Local-only files kept outside the Godot project
+# original/unused source assets (not shipped)
+asset_library/
+# reference videos/screenshots at repo root
+/*.mp4
+/*.png
+.claude/settings.local.json

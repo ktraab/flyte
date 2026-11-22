@@ -1,0 +1,424 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/screens/Gameplay.gd" id="1_gpgd"]
+
+[node name="Gameplay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_gpgd")
+
+[node name="TopHUD" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+offset_bottom = 108
+grow_horizontal = 2
+mouse_filter = 0
+
+[node name="HUDMargin" type="MarginContainer" parent="TopHUD"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="TopHUD/HUDMargin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Row1" type="HBoxContainer" parent="TopHUD/HUDMargin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PauseButton" type="Button" parent="TopHUD/HUDMargin/VBox/Row1"]
+layout_mode = 2
+custom_minimum_size = Vector2(75, 44)
+text = "Pause"
+
+[node name="BalanceLabel" type="Label" parent="TopHUD/HUDMargin/VBox/Row1"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.95, 0.85, 0.3, 1.0)
+text = "$10,000"
+vertical_alignment = 1
+
+[node name="PlayersLabel" type="Label" parent="TopHUD/HUDMargin/VBox/Row1"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+text = "0 players"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="IncomeLabel" type="Label" parent="TopHUD/HUDMargin/VBox/Row1"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+text = "-$5.0/s"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Row1Btns" type="HBoxContainer" parent="TopHUD/HUDMargin/VBox/Row1"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BuilderButton" type="Button" parent="TopHUD/HUDMargin/VBox/Row1/Row1Btns"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 44)
+text = "Edit Course"
+
+[node name="TournamentButton" type="Button" parent="TopHUD/HUDMargin/VBox/Row1/Row1Btns"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 44)
+theme_override_colors/font_color = Color(1.0, 0.85, 0.2, 1.0)
+text = "Tournament"
+
+[node name="StaffButton" type="Button" parent="TopHUD/HUDMargin/VBox/Row1/Row1Btns"]
+layout_mode = 2
+custom_minimum_size = Vector2(75, 44)
+text = "Staff"
+
+[node name="TestButton" type="Button" parent="TopHUD/HUDMargin/VBox/Row1/Row1Btns"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 44)
+theme_override_colors/font_color = Color(0.4, 1.0, 0.5, 1.0)
+text = "Test Course"
+
+[node name="StatsButton" type="Button" parent="TopHUD/HUDMargin/VBox/Row1/Row1Btns"]
+layout_mode = 2
+custom_minimum_size = Vector2(75, 44)
+theme_override_colors/font_color = Color(0.5, 0.9, 1.0, 1.0)
+text = "Stats"
+
+[node name="FeesButton" type="Button" parent="TopHUD/HUDMargin/VBox/Row1/Row1Btns"]
+layout_mode = 2
+custom_minimum_size = Vector2(75, 44)
+theme_override_colors/font_color = Color(0.9, 1.0, 0.5, 1.0)
+text = "Fees"
+
+[node name="AnalyticsButton" type="Button" parent="TopHUD/HUDMargin/VBox/Row1/Row1Btns"]
+layout_mode = 2
+custom_minimum_size = Vector2(90, 44)
+theme_override_colors/font_color = Color(0.85, 0.60, 1.0, 1.0)
+text = "📊 Analytics"
+
+[node name="Row2" type="HBoxContainer" parent="TopHUD/HUDMargin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="WindLabel" type="Label" parent="TopHUD/HUDMargin/VBox/Row2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Wind: calm"
+vertical_alignment = 1
+
+[node name="RatingLabel" type="Label" parent="TopHUD/HUDMargin/VBox/Row2"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Rating: ☆☆☆☆☆"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HappinessLabel" type="Label" parent="TopHUD/HUDMargin/VBox/Row2"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1.0, 0.8, 0.3, 1.0)
+text = "Happiness: —"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DayLabel" type="Label" parent="TopHUD/HUDMargin/VBox/Row2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.7, 0.9, 0.7, 0.9)
+text = "Day 1 — Spring"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="GoalSep" type="HSeparator" parent="TopHUD/HUDMargin/VBox"]
+layout_mode = 2
+theme_override_colors/separator = Color(1.0, 1.0, 1.0, 0.08)
+
+[node name="Row3" type="HBoxContainer" parent="TopHUD/HUDMargin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="GoalLabel" type="Label" parent="TopHUD/HUDMargin/VBox/Row3"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.8, 0.75, 1.0, 0.9)
+text = "Goal: Build your first complete hole"
+vertical_alignment = 1
+
+[node name="StaffOverlay" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_right = 320.0
+offset_top = -410.0
+offset_bottom = 410.0
+visible = false
+
+[node name="StaffMargin" type="MarginContainer" parent="StaffOverlay"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="StaffVBox" type="VBoxContainer" parent="StaffOverlay/StaffMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StaffTitle" type="Label" parent="StaffOverlay/StaffMargin/StaffVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Staff & Course Management"
+horizontal_alignment = 1
+
+[node name="StaffScroll" type="ScrollContainer" parent="StaffOverlay/StaffMargin/StaffVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StaffRows" type="VBoxContainer" parent="StaffOverlay/StaffMargin/StaffVBox/StaffScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="StaffCloseBtn" type="Button" parent="StaffOverlay/StaffMargin/StaffVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+text = "Close"
+
+[node name="NPCInfoPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -290.0
+offset_top = -280.0
+offset_right = -10.0
+offset_bottom = -10.0
+visible = false
+
+[node name="NPCInfoMargin" type="MarginContainer" parent="NPCInfoPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="NPCInfoVBox" type="VBoxContainer" parent="NPCInfoPanel/NPCInfoMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NPCInfoTitle" type="Label" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Player Info"
+horizontal_alignment = 1
+
+[node name="NPCInfoTypeBadge" type="Label" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.9, 1.0, 1.0)
+text = "[Amateur]"
+horizontal_alignment = 1
+
+[node name="NPCInfoAction" type="Label" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 0.9)
+text = "Playing Hole 1/9"
+horizontal_alignment = 1
+
+[node name="NPCInfoSep" type="HSeparator" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox"]
+layout_mode = 2
+theme_override_colors/separator = Color(1.0, 1.0, 1.0, 0.12)
+
+[node name="NPCNeedsSection" type="VBoxContainer" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HungerRow" type="HBoxContainer" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection"]
+layout_mode = 2
+
+[node name="HungerLabel" type="Label" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection/HungerRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 0)
+theme_override_font_sizes/font_size = 12
+text = "Hunger:"
+vertical_alignment = 1
+
+[node name="HungerBar" type="ProgressBar" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection/HungerRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 18)
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="ThirstRow" type="HBoxContainer" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection"]
+layout_mode = 2
+
+[node name="ThirstLabel" type="Label" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection/ThirstRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 0)
+theme_override_font_sizes/font_size = 12
+text = "Thirst:"
+vertical_alignment = 1
+
+[node name="ThirstBar" type="ProgressBar" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection/ThirstRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 18)
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="BathroomRow" type="HBoxContainer" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection"]
+layout_mode = 2
+
+[node name="BathroomLabel" type="Label" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection/BathroomRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 0)
+theme_override_font_sizes/font_size = 12
+text = "Bathroom:"
+vertical_alignment = 1
+
+[node name="BathroomBar" type="ProgressBar" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCNeedsSection/BathroomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 18)
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="NPCInfoCloseBtn" type="Button" parent="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+text = "Close"
+
+[node name="StatsOverlay" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_right = 240.0
+offset_top = -310.0
+offset_bottom = 310.0
+visible = false
+
+[node name="StatsContent" type="MarginContainer" parent="StatsOverlay"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="StatsScroll" type="ScrollContainer" parent="StatsOverlay/StatsContent"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatsVBox" type="VBoxContainer" parent="StatsOverlay/StatsContent/StatsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="FeesOverlay" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -210.0
+offset_right = 210.0
+offset_top = -220.0
+offset_bottom = 220.0
+visible = false
+
+[node name="FeesContent" type="MarginContainer" parent="FeesOverlay"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="FeesScroll" type="ScrollContainer" parent="FeesOverlay/FeesContent"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="FeesVBox" type="VBoxContainer" parent="FeesOverlay/FeesContent/FeesScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="AnalyticsOverlay" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -380.0
+offset_right = 380.0
+offset_top = -340.0
+offset_bottom = 340.0
+visible = false
+
+[node name="AnalyticsContent" type="MarginContainer" parent="AnalyticsOverlay"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="AnalyticsScroll" type="ScrollContainer" parent="AnalyticsOverlay/AnalyticsContent"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AnalyticsVBox" type="VBoxContainer" parent="AnalyticsOverlay/AnalyticsContent/AnalyticsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="MinimapPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.0
+anchor_right = 0.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = 142.0
+offset_top = -147.0
+offset_bottom = -10.0
+
+[node name="MinimapTex" type="TextureRect" parent="MinimapPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+
+[connection signal="pressed" from="TopHUD/HUDMargin/VBox/Row1/PauseButton" to="." method="_on_pause_pressed"]
+[connection signal="pressed" from="TopHUD/HUDMargin/VBox/Row1/Row1Btns/BuilderButton" to="." method="_on_builder_pressed"]
+[connection signal="pressed" from="TopHUD/HUDMargin/VBox/Row1/Row1Btns/TournamentButton" to="." method="_on_tournament_pressed"]
+[connection signal="pressed" from="TopHUD/HUDMargin/VBox/Row1/Row1Btns/StaffButton" to="." method="_on_staff_pressed"]
+[connection signal="pressed" from="TopHUD/HUDMargin/VBox/Row1/Row1Btns/TestButton" to="." method="_on_test_pressed"]
+[connection signal="pressed" from="TopHUD/HUDMargin/VBox/Row1/Row1Btns/StatsButton" to="." method="_on_stats_pressed"]
+[connection signal="pressed" from="TopHUD/HUDMargin/VBox/Row1/Row1Btns/FeesButton" to="." method="_on_fees_pressed"]
+[connection signal="pressed" from="StaffOverlay/StaffMargin/StaffVBox/StaffCloseBtn" to="." method="_on_staff_close_pressed"]
+[connection signal="pressed" from="NPCInfoPanel/NPCInfoMargin/NPCInfoVBox/NPCInfoCloseBtn" to="." method="_on_npc_info_close_pressed"]

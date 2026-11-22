@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://gw3dscene0001"]
+
+[ext_resource type="Script" path="res://scenes/game_world/GameWorld3D.gd" id="1_gw3d"]
+[ext_resource type="Script" path="res://scenes/game_world/CourseCamera3D.gd" id="2_cam3d"]
+
+[node name="GameWorld3D" type="Node3D"]
+script = ExtResource("1_gw3d")
+
+[node name="CourseCamera3D" type="Camera3D" parent="."]
+script = ExtResource("2_cam3d")

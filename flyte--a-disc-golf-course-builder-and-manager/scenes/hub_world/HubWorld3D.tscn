@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://hubworld3d0001"]
+
+[ext_resource type="Script" path="res://scenes/hub_world/HubWorld3D.gd" id="1_hw3d"]
+
+[node name="HubWorld3D" type="Node3D"]
+script = ExtResource("1_hw3d")

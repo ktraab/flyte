@@ -1,0 +1,79 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/screens/MainMenu.gd" id="1_mmgd"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mmgd")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.07, 0.13, 0.08, 1)
+
+[node name="CenterBox" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="CenterBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(320, 0)
+
+[node name="Margin" type="MarginContainer" parent="CenterBox/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="VBox" type="VBoxContainer" parent="CenterBox/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="CenterBox/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 52
+text = "FLYTE"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="CenterBox/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Disc Golf Course Builder & Manager"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="CenterBox/Card/Margin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 20)
+
+[node name="PlayBtn" type="Button" parent="CenterBox/Card/Margin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+text = "Play"
+
+[node name="SettingsBtn" type="Button" parent="CenterBox/Card/Margin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 56)
+text = "Settings"
+
+[node name="QuitBtn" type="Button" parent="CenterBox/Card/Margin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 56)
+text = "Quit"
+
+[connection signal="pressed" from="CenterBox/Card/Margin/VBox/PlayBtn" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="CenterBox/Card/Margin/VBox/SettingsBtn" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="CenterBox/Card/Margin/VBox/QuitBtn" to="." method="_on_quit_pressed"]
