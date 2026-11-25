@@ -15,6 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Flyte: A Disc Golf Course Builder and Manager"
+config/version="1.1.0"
 run/main_scene="uid://cnhvmbthive3"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -37,6 +38,7 @@ GoalsSystem="*res://autoloads/GoalsSystem.gd"
 StoryManager="*res://autoloads/StoryManager.gd"
 LevelSystem="*res://autoloads/LevelSystem.gd"
 UIAudio="*res://autoloads/UIAudio.gd"
+UpdateChecker="*res://autoloads/UpdateChecker.gd"
 GameAudio="*res://autoloads/GameAudio.gd"
 
 [display]

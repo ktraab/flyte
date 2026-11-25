@@ -25,6 +25,7 @@ const TOOL_OB         := 15
 const TOOL_RAISE      := 16
 const TOOL_LOWER      := 17
 const TOOL_SELECT     := 18
+const TOOL_ERASE      := 19   # GameWorld3D.TOOL_ERASE — removes objects too
 const TOOL_BENCH      := 20
 const TOOL_FLOWER_BED := 21
 const TOOL_SCULPTURE  := 22
@@ -78,6 +79,7 @@ var _n_edit_route_btn:           Button
 var _n_tree_size_container:      Control
 var _n_tree_size_option:         OptionButton
 var _n_balance_label:            Label
+var _n_erase_btn:                Button
 
 # Architect overlay (built programmatically)
 var _n_palette_groups: Array = []
@@ -111,19 +113,36 @@ func _ready() -> void:
 	call_deferred("_setup_nodes")
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and (event as InputEventKey).pressed:
+	# Screens stay in the tree when hidden — never edit the course from gameplay.
+	if not is_visible_in_tree():
+		return
+	if event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo:
 		var ke := event as InputEventKey
-		if ke.keycode == KEY_Z and ke.ctrl_pressed:
+		if ke.keycode == KEY_Z and ke.is_command_or_control_pressed():   # ⌘Z on Mac, Ctrl+Z elsewhere
 			if GameManager.world:
 				(GameManager.world as GameWorld3D).undo_paint()
+				call_deferred("_update_course_stats")
 			get_viewport().set_input_as_handled()
 		elif ke.keycode == KEY_DELETE or ke.keycode == KEY_BACKSPACE:
 			if GameManager.world:
 				var world := GameManager.world as GameWorld3D
-				var hover := world.get_hover_cell()
-				if hover.x >= 0 and hover.y >= 0:
-					world.erase_cell(hover)
+				var target := world.get_hover_cell()
+				if _active_tool == TOOL_SELECT and _editing_selected and _selected_cell.x >= 0:
+					target = _selected_cell
+				if target.x >= 0 and target.y >= 0:
+					world.erase_cell(target)
+					world.draw_route_lines()
+					_editing_selected = false
+					_refresh_side_panels()
 			get_viewport().set_input_as_handled()
+		elif ke.keycode == KEY_R and not ke.is_command_or_control_pressed():
+			# Rotate the tee (manual facing; placing its basket re-aims it)
+			if _active_tool == TOOL_TEE or (_editing_selected and _selected_tile_type == TOOL_TEE):
+				var cur := _active_orientation
+				if _editing_selected and GameManager.world:
+					cur = (GameManager.world as GameWorld3D).get_tile_orientation(_selected_cell)
+				_on_orientation_pressed((cur + (3 if ke.shift_pressed else 1)) % 4)
+				get_viewport().set_input_as_handled()
 
 func _fc(name: String) -> Node:
 	return find_child(name, true, false)
@@ -234,15 +253,16 @@ func _setup_nodes() -> void:
 
 	var undo_btn := _fc("UndoButton") as Button
 	if undo_btn:
+		undo_btn.tooltip_text = "Undo last change  (⌘Z / Ctrl+Z) — a whole drag undoes at once"
 		undo_btn.pressed.connect(func() -> void:
 			if GameManager.world:
 				(GameManager.world as GameWorld3D).undo_paint())
 
-	var erase_btn := _fc("EraseButton") as Button
-	if erase_btn:
-		erase_btn.pressed.connect(func() -> void:
-			_active_tool = TOOL_GRASS
-			_on_tool_pressed(TOOL_GRASS))
+	_n_erase_btn = _fc("EraseButton") as Button
+	if _n_erase_btn:
+		_n_erase_btn.toggle_mode = true
+		_n_erase_btn.tooltip_text = "Erase — remove anything (tees, baskets, trees, buildings) back to grass. Delete key erases under the cursor. Other tools never paint over objects."
+		_n_erase_btn.pressed.connect(func() -> void: _on_tool_pressed(TOOL_ERASE))
 
 	var toggle_btn := _fc("TogglePanelBtn") as Button
 	if toggle_btn:
@@ -292,6 +312,9 @@ func _setup_nodes() -> void:
 		_n_facility_color_option.selected = 0
 		_n_facility_color_option.item_selected.connect(_on_facility_color_selected)
 
+	var orient_lbl := _fc("OrientLabel") as Label
+	if orient_lbl:
+		orient_lbl.text = "TEE FACING\nAuto-aims at its basket · R rotates"
 	# Orientation buttons
 	var face_names := ["FaceNBtn","FaceEBtn","FaceSBtn","FaceWBtn"]
 	for i in face_names.size():
@@ -342,9 +365,6 @@ func _switch_palette_tab(idx: int) -> void:
 func on_screen_entered(_params: Dictionary = {}) -> void:
 	if GameManager.world:
 		var w := GameManager.world as GameWorld3D
-		w.set_select_mode(false)
-		w.set_builder_mode(true)
-		w.set_active_tool(_active_tool)
 		w.set_active_variant(_active_variant)
 		w.set_active_hole_num(_active_hole_num)
 		w.set_active_orientation(_active_orientation)
@@ -354,6 +374,7 @@ func on_screen_entered(_params: Dictionary = {}) -> void:
 			w.facility_info_requested.connect(_on_facility_info_requested)
 		if not w.route_changed.is_connected(_on_route_changed):
 			w.route_changed.connect(_on_route_changed)
+	_apply_world_tool_mode()
 	call_deferred("_update_course_stats")
 	if not EventBus.balance_changed.is_connected(_on_builder_balance_changed):
 		EventBus.balance_changed.connect(_on_builder_balance_changed)
@@ -409,22 +430,28 @@ func _on_tool_pressed(tile_type: int) -> void:
 			_n_edit_route_btn.button_pressed = false
 	_active_tool = tile_type
 	_highlight_tool(tile_type)
+	_editing_selected = false
 	if tile_type == TOOL_SELECT:
-		_editing_selected = false
 		_selected_cell = Vector2i(-1, -1)
 		_selected_tile_type = -1
-		if GameManager.world:
-			var w := GameManager.world as GameWorld3D
-			w.set_select_mode(true)
-			w.set_builder_mode(false)
-	else:
-		_editing_selected = false
-		if GameManager.world:
-			var w := GameManager.world as GameWorld3D
-			w.set_select_mode(false)
-			w.set_builder_mode(true)
-			w.set_active_tool(tile_type)
+		EventBus.notification_requested.emit(
+			"Select: click an object to edit it · drag it to move · Delete removes it.", "info")
+	_apply_world_tool_mode()
 	_refresh_side_panels()
+
+## Put the world in the mode the active tool needs. Select isn't a paint tool —
+## the world must never be told to paint tile type 18.
+func _apply_world_tool_mode() -> void:
+	if not GameManager.world:
+		return
+	var w := GameManager.world as GameWorld3D
+	if _active_tool == TOOL_SELECT:
+		w.set_builder_mode(false)
+		w.set_select_mode(true)
+	else:
+		w.set_select_mode(false)
+		w.set_builder_mode(true)
+		w.set_active_tool(_active_tool)
 
 func _highlight_tool(tile_type: int) -> void:
 	for i in _tool_buttons.size():
@@ -434,6 +461,8 @@ func _highlight_tool(tile_type: int) -> void:
 		var dbtn := _decor_tool_buttons[dtool] as Button
 		if dbtn:
 			dbtn.button_pressed = (dtool == tile_type)
+	if _n_erase_btn:
+		_n_erase_btn.set_pressed_no_signal(tile_type == TOOL_ERASE)
 
 func _refresh_side_panels() -> void:
 	var hole_vis       := false
@@ -446,11 +475,12 @@ func _refresh_side_panels() -> void:
 	if _active_tool == TOOL_SELECT and _editing_selected:
 		var is_facility  := (_selected_tile_type >= TOOL_PARKING and _selected_tile_type <= TOOL_PRO_SHOP)
 		var is_hole_tile := (_selected_tile_type == TOOL_TEE or _selected_tile_type == TOOL_BASKET)
+		var is_tree_sel  := _selected_tile_type == TOOL_TREE
 		hole_vis       = is_hole_tile
 		orient_vis     = (_selected_tile_type == TOOL_TEE or is_facility)
 		facility_vis   = is_facility
 		route_edit_vis = is_hole_tile
-		context_vis    = is_hole_tile or is_facility
+		context_vis    = is_hole_tile or is_facility or is_tree_sel
 	else:
 		var is_tee    := _active_tool == TOOL_TEE
 		var is_basket := _active_tool == TOOL_BASKET
@@ -458,12 +488,13 @@ func _refresh_side_panels() -> void:
 		hole_vis    = is_tee or is_basket
 		orient_vis  = is_tee
 		tree_vis    = is_tree
+		route_edit_vis = is_tee or is_basket
 		context_vis = is_tee or is_basket or is_tree
 
 	if _n_hole_num_container:        _n_hole_num_container.visible        = hole_vis
 	if _n_orientation_container:     _n_orientation_container.visible     = orient_vis
 	if _n_tree_variant_container:    _n_tree_variant_container.visible    = tree_vis
-	if _n_tree_size_container:       _n_tree_size_container.visible       = tree_vis
+	if _n_tree_size_container:       _n_tree_size_container.visible       = tree_vis or (_editing_selected and _selected_tile_type == TOOL_TREE)
 	if _n_facility_color_container:  _n_facility_color_container.visible  = facility_vis
 	if _n_route_edit_container:      _n_route_edit_container.visible      = route_edit_vis
 	if _n_left_panel:                _n_left_panel.visible                = context_vis
@@ -483,9 +514,15 @@ func _on_tile_info_requested(cell: Vector2i, tile_type: int, hole_num: int, orie
 		if _n_edit_route_btn:
 			_n_edit_route_btn.button_pressed = false
 
+	if tile_type == TOOL_TREE:
+		if _n_tree_size_option:
+			_n_tree_size_option.selected = clampi(orientation, 0, 2)   # carries the tree size
+	elif tile_type != TOOL_TEE and tile_type != TOOL_BASKET:
+		EventBus.notification_requested.emit("Drag it to move it · Delete removes it.", "info")
+
 	var hole_spin := _fc("HoleNumSpin") as SpinBox
-	if hole_spin:
-		hole_spin.value = hole_num
+	if hole_spin and (tile_type == TOOL_TEE or tile_type == TOOL_BASKET):
+		hole_spin.set_value_no_signal(hole_num)
 
 	if tile_type == TOOL_TEE and _n_orient_btns:
 		for i in _n_orient_btns.get_child_count():
@@ -593,8 +630,7 @@ func _on_manage_holes_pressed() -> void:
 func _on_close_holes_pressed() -> void:
 	if _n_hole_manager_overlay:
 		_n_hole_manager_overlay.visible = false
-	if GameManager.world:
-		(GameManager.world as GameWorld3D).set_builder_mode(true)
+	_apply_world_tool_mode()
 	_update_course_stats()
 
 
@@ -602,14 +638,28 @@ func _on_close_holes_pressed() -> void:
 func _on_edit_route_pressed() -> void:
 	if not GameManager.world:
 		return
+	var w := GameManager.world as GameWorld3D
+	if not _editing_selected:
+		_selected_hole_num = _active_hole_num   # Tee/Basket tool: edit the active hole
+	if not _route_edit_active and w.get_holes_info().filter(
+			func(h: Dictionary) -> bool: return (h["hole_num"] as int) == _selected_hole_num).is_empty():
+		EventBus.notification_requested.emit("Hole %d needs a tee and a basket before it has a route." % _selected_hole_num, "warning")
+		if _n_edit_route_btn:
+			_n_edit_route_btn.set_pressed_no_signal(false)
+		return
 	_route_edit_active = not _route_edit_active
-	(GameManager.world as GameWorld3D).set_route_edit_mode(_selected_hole_num, _route_edit_active)
+	w.set_route_edit_mode(_selected_hole_num, _route_edit_active)
 	if _n_edit_route_btn:
-		_n_edit_route_btn.button_pressed = _route_edit_active
+		_n_edit_route_btn.set_pressed_no_signal(_route_edit_active)
 	if _route_edit_active:
-		EventBus.notification_requested.emit("Click tiles to add/remove route waypoints. Click Edit Route to finish.", "info")
+		EventBus.notification_requested.emit(
+			"Hole %d route: click to add a bend · drag a dot to move it · click a dot to remove it. Press Edit Route again when done." % _selected_hole_num, "info")
+	else:
+		_apply_world_tool_mode()
 
 func _on_clear_route_pressed() -> void:
+	if not _editing_selected:
+		_selected_hole_num = _active_hole_num
 	if GameManager.world:
 		(GameManager.world as GameWorld3D).clear_route_waypoints(_selected_hole_num)
 		EventBus.notification_requested.emit("Route waypoints cleared.", "info")

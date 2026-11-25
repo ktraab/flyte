@@ -1,5 +1,6 @@
-## Orthographic isometric camera. Pan with WASD / arrow keys; zoom with scroll / pinch.
-## Q / E to orbit (yaw) around the look-at centre.
+## Orthographic isometric camera. Pan with WASD / arrow keys or by dragging the
+## map (right / middle mouse anywhere; left mouse too outside the builder);
+## zoom with scroll / pinch. Q / E to orbit (yaw) around the look-at centre.
 class_name CourseCamera3D
 extends Camera3D
 
@@ -28,6 +29,13 @@ var _target_size:  float = 80.0
 var _tilt_angle:   float = -1.05
 var _yaw_angle:    float = 0.0   # synced from scene setup in _sync_target_pos
 
+# Drag-to-pan
+const DRAG_START_PX := 6.0   # left-drag only pans after this much travel (clicks stay clicks)
+var _drag_button: int = 0    # mouse button currently dragging the map (0 = none)
+var _drag_last:  Vector2 = Vector2.ZERO
+var _drag_start: Vector2 = Vector2.ZERO
+var _drag_live:  bool = false
+
 func _ready() -> void:
 	projection   = Camera3D.PROJECTION_ORTHOGONAL
 	size         = 80.0
@@ -39,6 +47,70 @@ func _ready() -> void:
 func _sync_target_pos() -> void:
 	_target_pos = global_position
 	_yaw_angle  = rotation.y   # capture initial yaw from Main.gd look_at setup
+
+## Left-drag pans only in plain gameplay — in the builder left paints/selects.
+func _left_drag_allowed() -> bool:
+	if InputHandler.mode == InputHandler.Mode.TOUCH:
+		return false   # touch pans through TouchInputHandler (and emulates mouse)
+	if GameManager.state != GameManager.GameState.GAMEPLAY:
+		return false
+	var w := GameManager.world
+	return w == null or not (w.get("_builder_mode") or w.get("_select_mode"))
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not current:
+		_drag_button = 0
+		return
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		var b := mb.button_index
+		var pannable := b == MOUSE_BUTTON_RIGHT or b == MOUSE_BUTTON_MIDDLE \
+			or (b == MOUSE_BUTTON_LEFT and _left_drag_allowed())
+		if mb.pressed and pannable and _drag_button == 0:
+			_drag_button = b
+			_drag_start = mb.position
+			_drag_last = mb.position
+			_drag_live = b != MOUSE_BUTTON_LEFT
+		elif not mb.pressed and b == _drag_button:
+			_drag_button = 0
+			if _drag_live and b == MOUSE_BUTTON_LEFT:
+				get_viewport().set_input_as_handled()   # a drag isn't a click
+			_drag_live = false
+	elif event is InputEventMouseMotion and _drag_button != 0:
+		var mm := event as InputEventMouseMotion
+		if not Input.is_mouse_button_pressed(_drag_button) and DisplayServer.get_name() != "headless":
+			_drag_button = 0   # released over the UI
+			_drag_live = false
+			return
+		if not _drag_live and (mm.position - _drag_start).length() >= DRAG_START_PX:
+			_drag_live = true
+		if _drag_live:
+			drag_pan(_drag_last, mm.position)
+		_drag_last = mm.position
+
+## Move the camera so the ground point under `from_px` ends up under `to_px`.
+func drag_pan(from_px: Vector2, to_px: Vector2) -> void:
+	var a := _ground_point(from_px)
+	var b := _ground_point(to_px)
+	if not a.is_finite() or not b.is_finite():
+		return
+	var d := a - b
+	d.y = 0.0
+	_target_pos += d
+	_target_pos.x = clampf(_target_pos.x, CAM_X_MIN, CAM_X_MAX)
+	_target_pos.z = clampf(_target_pos.z, CAM_Z_MIN, CAM_Z_MAX)
+	position.x = clampf(position.x + d.x, CAM_X_MIN, CAM_X_MAX)
+	position.z = clampf(position.z + d.z, CAM_Z_MIN, CAM_Z_MAX)
+
+func _ground_point(px: Vector2) -> Vector3:
+	var o := project_ray_origin(px)
+	var dir := project_ray_normal(px)
+	if absf(dir.y) < 0.0001:
+		return Vector3(INF, INF, INF)
+	return o + dir * (-o.y / dir.y)
+
+func is_drag_panning() -> bool:
+	return _drag_live
 
 func _process(delta: float) -> void:
 	# Don't consume input while inactive (e.g. during play-test mode).

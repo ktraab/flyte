@@ -528,22 +528,10 @@ func _refresh_speed_btns() -> void:
 			continue
 		btn.disabled = absf(speeds[i] - _time_speed) < 0.01
 
-func _input(event: InputEvent) -> void:
-	# Block scroll-zoom when any overlay is open — must run in _input (before _unhandled_input)
-	if event is InputEventMouseButton:
-		var mb := event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			var any_open := (
-				(_staff_overlay     and _staff_overlay.visible)     or
-				(_stats_overlay     and _stats_overlay.visible)     or
-				(_fees_overlay      and _fees_overlay.visible)      or
-				(_events_overlay    and _events_overlay.visible)    or
-				(_goals_overlay     and _goals_overlay.visible)     or
-				(_hole_overlay      and _hole_overlay.visible)      or
-				(_analytics_overlay and _analytics_overlay.visible)
-			)
-			if any_open:
-				get_viewport().set_input_as_handled()
+# (No _input wheel blocker: it ate every wheel event while an overlay was open,
+# so no menu could scroll. Panels stop the wheel themselves — GUI input runs
+# before _unhandled_input, where the camera zooms — so the map still doesn't
+# zoom while you scroll a menu.)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_visible_in_tree():

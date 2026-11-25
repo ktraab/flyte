@@ -36,6 +36,21 @@ enum TileType {
 # Tool values beyond TileType range — handled in _paint_at
 const TOOL_RAISE := 16
 const TOOL_LOWER := 17
+const TOOL_ERASE := 19   # removes anything (objects included) back to grass
+
+## Ground-cover tiles. Painting ground never replaces an object (tee, basket,
+## tree, facility, decor) — only the Erase tool removes those.
+const GROUND_TILES := {
+	TileType.GRASS: true, TileType.FAIRWAY: true, TileType.PATH: true,
+	TileType.WATER: true, TileType.ROUGH: true, TileType.SAND: true,
+}
+## Objects placed one per click (dragging doesn't stamp copies).
+const SINGLE_PLACE_TOOLS := {
+	TileType.TEE: true, TileType.BASKET: true, TileType.ENTRANCE: true,
+	TileType.RESTROOM: true, TileType.FOOD_STAND: true, TileType.PRO_SHOP: true,
+	TileType.BENCH: true, TileType.FLOWER_BED: true, TileType.SCULPTURE: true,
+	TileType.LAMP_POST: true, TileType.SIGN: true, TileType.GARDEN: true,
+}
 
 const Props = preload("res://scenes/game_world/PropFactory.gd")
 const PropBatch = preload("res://scenes/game_world/PropBatch.gd")
@@ -164,6 +179,7 @@ var _builder_mode := false
 var _preview_prop:      Node3D    = null
 var _preview_prop_cell: Vector2i  = Vector2i(-9, -9)
 var _preview_prop_tool: int       = -99
+var _preview_prop_orient: int     = -1
 
 # ── NPC state ─────────────────────────────────────────────────────────────────
 const MAX_NPCS           := 10
@@ -209,6 +225,15 @@ var _select_mode: bool = false
 var _press_cell: Vector2i = Vector2i(-1, -1)
 var _mouse_held: bool = false
 var _drag_active: bool = false
+var _press_screen: Vector2 = Vector2.ZERO
+const DRAG_PX := 10.0               # pointer travel before a press becomes a drag
+var _wp_drag_idx: int = -1          # route edit: waypoint being dragged
+var _wp_moved: bool = false
+var _wp_new: bool = false
+var _stroke_counter: int = 0
+var _stroke_id: int = -1            # undo group of the current paint stroke (-1 = none)
+var _stroke_warned: bool = false
+var _stroke_last_cell: Vector2i = Vector2i(-1, -1)
 var _hover_anim_t:   float  = 0.0
 var _hover_mat:      StandardMaterial3D = null
 var _flag_nodes:     Array  = []   # Array of MeshInstance3D flag meshes to animate
@@ -329,42 +354,19 @@ func _process(delta: float) -> void:
 	# Reset painting if button released while cursor was over UI (we miss the up event)
 	if _painting and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_painting = false
+		_end_stroke()
+	# Released over the UI mid-drag: cancel the move instead of dropping it later.
+	if _mouse_held and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and not DisplayServer.get_name() == "headless":
+		_mouse_held = false
+		_drag_active = false
+		_press_cell = Vector2i(-1, -1)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _route_edit_hole >= 0:
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			var cell := _screen_to_cell(event.position)
-			if _valid(cell):
-				var holes := get_holes_info()
-				var skip_cells: Array = []
-				for h in holes:
-					if (h["hole_num"] as int) == _route_edit_hole:
-						skip_cells.append(h["tee_cell"] as Vector2i)
-						skip_cells.append(h["basket_cell"] as Vector2i)
-						break
-				if not cell in skip_cells:
-					toggle_route_waypoint(cell)
+		_route_edit_input(event)
 		return
 	if _select_mode:
-		if event is InputEventMouseMotion:
-			_hover_cell = _screen_to_cell(event.position)
-			_update_hover()
-			if _mouse_held and not _drag_active and _valid(_hover_cell) and _hover_cell != _press_cell:
-				_start_drag(_press_cell)
-		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed:
-				var cell := _screen_to_cell(event.position)
-				if _valid(cell) and _tiles.get(cell, TileType.GRASS) != TileType.GRASS:
-					_press_cell = cell
-					_mouse_held = true
-			else:
-				if _drag_active:
-					_finish_drag(_hover_cell)
-				elif _mouse_held and _valid(_press_cell):
-					_emit_tile_info(_press_cell)
-				_drag_active = false
-				_mouse_held  = false
-				_press_cell  = Vector2i(-1, -1)
+		_select_input(event)
 		return
 	if not _builder_mode:
 		return
@@ -374,9 +376,85 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		_painting = event.pressed
 		if _painting:
+			_begin_stroke()
 			_paint_at(_screen_to_cell(event.position))
-	if event is InputEventMouseMotion and _painting:
-		_paint_at(_screen_to_cell(event.position))
+		else:
+			_end_stroke()
+	if event is InputEventMouseMotion and _painting and not SINGLE_PLACE_TOOLS.has(_active_tool):
+		var cell := _screen_to_cell(event.position)
+		if cell != _stroke_last_cell:
+			_paint_at(cell)
+
+## One mouse press → release is one stroke: one undo step, one warning.
+func _begin_stroke() -> void:
+	_stroke_counter += 1
+	_stroke_id = _stroke_counter
+	_stroke_warned = false
+	_stroke_last_cell = Vector2i(-1, -1)
+
+func _end_stroke() -> void:
+	_stroke_id = -1
+	_stroke_last_cell = Vector2i(-1, -1)
+
+## Select tool: click an object to edit it; press and drag it (past DRAG_PX) to move it.
+func _select_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		_hover_cell = _screen_to_cell(event.position)
+		if _mouse_held and not _drag_active and _valid(_press_cell) \
+				and (event.position - _press_screen).length() >= DRAG_PX:
+			_start_drag(_press_cell)
+		_update_hover()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			var cell := _screen_to_cell(event.position)
+			_press_cell = Vector2i(-1, -1)
+			_mouse_held = false
+			_drag_active = false
+			if _valid(cell) and not GROUND_TILES.has(_tiles.get(cell, TileType.GRASS)):
+				_press_cell   = cell
+				_press_screen = event.position
+				_mouse_held   = true
+		else:
+			if _drag_active:
+				_finish_drag(_screen_to_cell(event.position))
+			elif _mouse_held and _valid(_press_cell):
+				_emit_tile_info(_press_cell)
+			_drag_active = false
+			_mouse_held  = false
+			_press_cell  = Vector2i(-1, -1)
+			_update_hover()
+
+## Route edit: click empty ground to add a bend (inserted where it fits the
+## line best, and can be dragged straight away); drag a dot to move it; click a
+## dot without dragging to remove it.
+func _route_edit_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		_hover_cell = _screen_to_cell(event.position)
+		_update_hover()
+		if _wp_drag_idx >= 0 and (_wp_moved or (event.position - _press_screen).length() >= DRAG_PX):
+			_wp_moved = true
+			move_route_waypoint(_route_edit_hole, _wp_drag_idx, _hover_cell)
+		return
+	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT):
+		return
+	var cell := _screen_to_cell(event.position)
+	if event.pressed:
+		_press_screen = event.position
+		_wp_moved = false
+		_wp_new = false
+		_wp_drag_idx = _waypoint_index_near(_route_edit_hole, cell)
+		if _wp_drag_idx < 0 and _valid(cell) and not cell in _route_endpoints(_route_edit_hole):
+			_wp_drag_idx = insert_route_waypoint(_route_edit_hole, cell)
+			_wp_new = true
+	else:
+		if _wp_drag_idx >= 0:
+			if not _wp_moved and not _wp_new:
+				remove_route_waypoint(_route_edit_hole, _wp_drag_idx)
+			elif _wp_moved:
+				route_changed.emit(_route_edit_hole)
+		_wp_drag_idx = -1
+		_wp_moved = false
+		_wp_new = false
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
@@ -1304,9 +1382,10 @@ func _add_ground_skirt() -> void:
 	var z0 := -CELL_SIZE * 0.5
 	var x1 := (GRID_COLS - 0.5) * CELL_SIZE
 	var z1 := (GRID_ROWS - 0.5) * CELL_SIZE
+	# Darker, muted field outside so the buildable area reads at a glance.
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = TILE_COLOR[TileType.GRASS] as Color
-	mat.roughness    = 0.75
+	mat.albedo_color = OUTSIDE_GROUND_COLOR
+	mat.roughness    = 0.9
 	var strips := [   # [centre x, centre z, size x, size z]
 		[(x0 + x1) * 0.5, z0 - margin * 0.5, x1 - x0 + margin * 2.0, margin],   # north
 		[(x0 + x1) * 0.5, z1 + margin * 0.5, x1 - x0 + margin * 2.0, margin],   # south
@@ -1321,6 +1400,35 @@ func _add_ground_skirt() -> void:
 		mi.mesh = pm
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.position = Vector3(st[0], top_y, st[1])
+		add_child(mi)
+	_add_boundary_line(x0, z0, x1, z1, top_y)
+
+const OUTSIDE_GROUND_COLOR := Color(0.27, 0.36, 0.20)   # desaturated, darker than GRASS
+const BOUNDARY_COLOR       := Color(0.93, 0.89, 0.74)   # chalk line
+const BOUNDARY_WIDTH       := 0.7
+
+## Chalk-coloured strip just outside the grid edge: the course boundary.
+func _add_boundary_line(x0: float, z0: float, x1: float, z1: float, top_y: float) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = BOUNDARY_COLOR
+	mat.roughness    = 0.85
+	var w := BOUNDARY_WIDTH
+	var y := top_y + 0.04
+	var strips := [   # [centre x, centre z, size x, size z]
+		[(x0 + x1) * 0.5, z0 - w * 0.5, x1 - x0 + w * 2.0, w],
+		[(x0 + x1) * 0.5, z1 + w * 0.5, x1 - x0 + w * 2.0, w],
+		[x0 - w * 0.5, (z0 + z1) * 0.5, w, z1 - z0],
+		[x1 + w * 0.5, (z0 + z1) * 0.5, w, z1 - z0],
+	]
+	for st in strips:
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(st[2], st[3])
+		pm.surface_set_material(0, mat)
+		var mi := MeshInstance3D.new()
+		mi.name = "BoundaryLine"
+		mi.mesh = pm
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.position = Vector3(st[0], y, st[1])
 		add_child(mi)
 
 # ── Water surface — shiny separate layer ──────────────────────────────────────
@@ -2072,20 +2180,86 @@ func toggle_route_waypoint(cell: Vector2i) -> void:
 	if _route_edit_hole < 0 or not _valid(cell):
 		return
 	var waypoints: Array = _hole_waypoints.get(_route_edit_hole, []) as Array
-	for i in waypoints.size():
-		if waypoints[i] == cell:
-			waypoints.remove_at(i)
-			_hole_waypoints[_route_edit_hole] = waypoints
-			draw_route_lines()
-			route_changed.emit(_route_edit_hole)
-			return
-	waypoints.append(cell)
-	_hole_waypoints[_route_edit_hole] = waypoints
+	var i := waypoints.find(cell)
+	if i >= 0:
+		remove_route_waypoint(_route_edit_hole, i)
+	else:
+		insert_route_waypoint(_route_edit_hole, cell)
+
+## Tee and basket cells of a hole ([] if the hole is incomplete).
+func _route_endpoints(hole_num: int) -> Array:
+	var h := _get_hole_info_for(hole_num)
+	if h.is_empty():
+		return []
+	return [h["tee_cell"] as Vector2i, h["basket_cell"] as Vector2i]
+
+## Index of the waypoint on/next to `cell` (within one cell), or -1.
+func _waypoint_index_near(hole_num: int, cell: Vector2i) -> int:
+	var wps: Array = _hole_waypoints.get(hole_num, []) as Array
+	var best := -1
+	var best_d := 2
+	for i in wps.size():
+		var w := wps[i] as Vector2i
+		var d := maxi(absi(w.x - cell.x), absi(w.y - cell.y))
+		if d < best_d:
+			best_d = d
+			best = i
+	return best
+
+## Add a bend where it lengthens the route least (so clicking beside the line
+## bends that stretch instead of always appending at the end). Returns its index.
+func insert_route_waypoint(hole_num: int, cell: Vector2i) -> int:
+	if not _valid(cell):
+		return -1
+	var wps: Array = (_hole_waypoints.get(hole_num, []) as Array).duplicate()
+	if wps.has(cell):
+		return wps.find(cell)
+	var ends := _route_endpoints(hole_num)
+	var idx := wps.size()
+	if not ends.is_empty():
+		var pts: Array = [ends[0]] + wps + [ends[1]]
+		var c := Vector2(cell)
+		var best := INF
+		for i in pts.size() - 1:
+			var p0 := Vector2(pts[i] as Vector2i)
+			var p1 := Vector2(pts[i + 1] as Vector2i)
+			var extra := p0.distance_to(c) + c.distance_to(p1) - p0.distance_to(p1)
+			if extra < best:
+				best = extra
+				idx = i
+	wps.insert(idx, cell)
+	_set_waypoints(hole_num, wps)
+	return idx
+
+func remove_route_waypoint(hole_num: int, idx: int) -> void:
+	var wps: Array = (_hole_waypoints.get(hole_num, []) as Array).duplicate()
+	if idx < 0 or idx >= wps.size():
+		return
+	wps.remove_at(idx)
+	_set_waypoints(hole_num, wps)
+
+func move_route_waypoint(hole_num: int, idx: int, cell: Vector2i) -> void:
+	var wps: Array = (_hole_waypoints.get(hole_num, []) as Array).duplicate()
+	if idx < 0 or idx >= wps.size() or not _valid(cell) or wps[idx] == cell:
+		return
+	if wps.has(cell) or _route_endpoints(hole_num).has(cell):
+		return
+	wps[idx] = cell
+	_set_waypoints(hole_num, wps, false)
+
+func _set_waypoints(hole_num: int, wps: Array, notify: bool = true) -> void:
+	if wps.is_empty():
+		_hole_waypoints.erase(hole_num)
+	else:
+		_hole_waypoints[hole_num] = wps
+	_aim_tee_at_basket(hole_num)
 	draw_route_lines()
-	route_changed.emit(_route_edit_hole)
+	if notify:
+		route_changed.emit(hole_num)
 
 func clear_route_waypoints(hole_num: int) -> void:
 	_hole_waypoints.erase(hole_num)
+	_aim_tee_at_basket(hole_num)
 	draw_route_lines()
 	route_changed.emit(hole_num)
 
@@ -2122,6 +2296,12 @@ func _emit_tile_info(cell: Vector2i) -> void:
 			var orient: int    = _facility_orientations.get(cell, 0) as int
 			var color_idx: int = _facility_colors.get(cell, 0) as int
 			facility_info_requested.emit(cell, tt, orient, color_idx)
+		TileType.TREE:
+			# orientation slot carries the tree size (0 small · 1 medium · 2 tall)
+			tile_info_requested.emit(cell, tt, 0, _tile_tree_size.get(cell, 2) as int)
+		_:
+			if not GROUND_TILES.has(tt):
+				tile_info_requested.emit(cell, tt, 0, 0)
 
 func _start_drag(from_cell: Vector2i) -> void:
 	if not _valid(from_cell):
@@ -2134,62 +2314,65 @@ func _finish_drag(to_cell: Vector2i) -> void:
 	_drag_active = false
 	_press_cell  = Vector2i(-1, -1)
 	_mouse_held  = false
+	move_object(src, to_cell)
 
+## Move an object (tee, basket, tree, facility, decor) to another cell. The
+## target must be ground — moving never destroys another object — and terrain
+## height stays where it is. One undo step. Returns true when moved.
+func move_object(src: Vector2i, to_cell: Vector2i) -> bool:
 	if not _valid(src) or not _valid(to_cell) or to_cell == src:
-		return
+		return false
 	var tt: int = _tiles.get(src, TileType.GRASS) as int
-	if tt == TileType.GRASS:
-		return
-	# PRO_SHOP sub-cell drag is not supported — only move via erase+replace
+	if GROUND_TILES.has(tt):
+		return false
 	if tt == TileType.PRO_SHOP:
-		var ps_anchor: Vector2i = _building_anchor.get(src, src) as Vector2i
-		if ps_anchor != src:
-			return  # sub-cell — skip drag
+		EventBus.notification_requested.emit("The Pro Shop can't be dragged — erase it and place it again.", "warning")
+		return false
+	var old_target: int = _tiles.get(to_cell, TileType.GRASS) as int
+	if not GROUND_TILES.has(old_target):
+		EventBus.notification_requested.emit("%s is already there." % _tile_name(old_target), "warning")
+		return false
 
-	# Save all metadata
-	var hole_num: int    = _tile_hole_num.get(src, 1) as int
-	var orient: int      = _tile_orientations.get(src, 0) as int
-	var par: int         = _tile_par.get(src, 3) as int
-	var variant: int     = _tile_variants.get(src, -1) as int
-	var height: float    = _tile_heights.get(src, 0.0) as float
-	var f_orient: int    = _facility_orientations.get(src, 0) as int
-	var f_color: int     = _facility_colors.get(src, 0) as int
-	var old_target: int  = _tiles.get(to_cell, TileType.GRASS) as int
+	var hole_num: int  = _tile_hole_num.get(src, 1) as int
+	var par: int       = _tile_par.get(src, 3) as int
+	var variant: int   = _tile_variants.get(src, -1) as int
+	var tree_sz: int   = _tile_tree_size.get(src, 2) as int
+	var f_orient: int  = _facility_orientations.get(src, 0) as int
+	var f_color: int   = _facility_colors.get(src, 0) as int
 
-	# Clear source
+	begin_undo_group()
+	_push_undo(src)
+	_push_undo(to_cell)
 	_tiles[src] = TileType.GRASS
 	_tile_hole_num.erase(src); _tile_orientations.erase(src)
 	_tile_par.erase(src);      _tile_variants.erase(src)
-	_tile_heights.erase(src);  _facility_orientations.erase(src)
-	_facility_colors.erase(src)
-	_update_tile_visual(src, TileType.GRASS, false)
+	_tile_tree_size.erase(src)
+	_facility_orientations.erase(src); _facility_colors.erase(src)
+	_update_tile_visual(src, TileType.GRASS, old_target == TileType.WATER)
 
-	# Clear target
-	_tiles[to_cell] = TileType.GRASS
-	_tile_hole_num.erase(to_cell); _tile_orientations.erase(to_cell)
-	_tile_par.erase(to_cell);      _tile_variants.erase(to_cell)
-	_facility_orientations.erase(to_cell); _facility_colors.erase(to_cell)
-
-	# Place at target
 	_tiles[to_cell] = tt
 	if tt == TileType.TEE or tt == TileType.BASKET:
 		_tile_hole_num[to_cell] = hole_num
 	if tt == TileType.TEE:
-		_tile_orientations[to_cell] = orient
 		_tile_par[to_cell] = par
+		_tile_orientations[to_cell] = tee_facing_for(to_cell, hole_num)
 	elif tt == TileType.TREE:
 		_tile_variants[to_cell] = variant
+		_tile_tree_size[to_cell] = tree_sz
 	elif FACILITY_COSTS.has(tt):
 		_facility_orientations[to_cell] = f_orient
 		_facility_colors[to_cell] = f_color
-	if height != 0.0:
-		_tile_heights[to_cell] = height
-	_update_tile_visual(to_cell, tt, false)
+	_update_tile_visual(to_cell, tt, old_target == TileType.WATER)
+	end_undo_group()
+	cell_changed.emit(src.x, src.y, TileType.GRASS)
+	cell_changed.emit(to_cell.x, to_cell.y, tt)
 
-	var touches_route := (tt == TileType.TEE or tt == TileType.BASKET
-			or old_target == TileType.TEE or old_target == TileType.BASKET)
-	if touches_route:
+	if tt == TileType.BASKET:
+		_aim_tee_at_basket(hole_num)
+	if tt == TileType.TEE or tt == TileType.BASKET:
+		_auto_par(hole_num)
 		draw_route_lines()
+	return true
 
 func _count_decor_tiles() -> int:
 	var by := _cells_by_type()
@@ -2236,15 +2419,24 @@ func _create_hover_indicator() -> void:
 	_hover_indicator.cast_shadow       = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_hover_indicator)
 
-	# Orientation arrow: thin elongated box along -Z, shown only for TEE / BASKET
-	var am := BoxMesh.new()
-	am.size = Vector3(0.25, 0.18, CELL_SIZE * 1.2)
+	# Facing arrow for the tee tool: flat arrow (shaft + head) pointing along -Z
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pts := [  # shaft (two triangles) then head
+		Vector3(-0.22, 0, 0.9), Vector3(0.22, 0, 0.9), Vector3(0.22, 0, -0.1),
+		Vector3(-0.22, 0, 0.9), Vector3(0.22, 0, -0.1), Vector3(-0.22, 0, -0.1),
+		Vector3(-0.65, 0, -0.1), Vector3(0.65, 0, -0.1), Vector3(0.0, 0, -1.0),
+	]
+	for v in pts:
+		st.set_normal(Vector3.UP)
+		st.add_vertex(v as Vector3)
+	var am := st.commit()
 	var amat := StandardMaterial3D.new()
-	amat.albedo_color      = Color(1.0, 0.92, 0.0, 0.85)
+	amat.albedo_color      = Color(1.0, 0.92, 0.0, 0.95)
 	amat.transparency      = BaseMaterial3D.TRANSPARENCY_ALPHA
+	amat.shading_mode      = BaseMaterial3D.SHADING_MODE_UNSHADED
+	amat.cull_mode         = BaseMaterial3D.CULL_DISABLED
 	amat.no_depth_test     = true
-	amat.emission_enabled  = true
-	amat.emission          = Color(1.0, 0.8, 0.0) * 0.6
 	_hover_arrow = MeshInstance3D.new()
 	_hover_arrow.mesh              = am
 	_hover_arrow.material_override = amat
@@ -2254,7 +2446,7 @@ func _create_hover_indicator() -> void:
 
 func _update_hover() -> void:
 	var valid := _valid(_hover_cell)
-	var show  := (_builder_mode or _drag_active) and valid
+	var show  := (_builder_mode or _select_mode or _route_edit_hole >= 0) and valid
 	_hover_indicator.visible = show
 	if _hover_arrow:
 		_hover_arrow.visible = false
@@ -2268,42 +2460,53 @@ func _update_hover() -> void:
 	var cell_pos := Vector3(_hover_cell.x * CELL_SIZE, base_y, _hover_cell.y * CELL_SIZE)
 	_hover_indicator.position = cell_pos
 
+	if not _builder_mode:
+		# Select / route edit: white over what you'd pick, red where a drag can't drop.
+		var blocked := _drag_active and not GROUND_TILES.has(tt) and _hover_cell != _press_cell
+		_hover_base_color = Color(1.0, 0.3, 0.25) if blocked else Color(0.75, 0.95, 1.0)
+		_clear_preview_prop()
+		return
+
 	# Tile-colored tint so it's obvious what you're about to place
 	var special_tool := (_active_tool == TOOL_RAISE or _active_tool == TOOL_LOWER
 		or _active_tool == TileType.OB or _active_tool == TileType.ROCK)
-	if special_tool:
+	if _active_tool == TOOL_ERASE:
+		_hover_base_color = Color(1.0, 0.3, 0.25)
+	elif not GROUND_TILES.has(tt) and tt != _active_tool and not special_tool:
+		_hover_base_color = Color(1.0, 0.3, 0.25)   # can't paint over this object
+	elif special_tool:
 		_hover_base_color = Color.WHITE
 	else:
 		var tc: Color = TILE_COLOR.get(_active_tool, Color.WHITE) as Color
 		_hover_base_color = Color(tc.r * 1.4, tc.g * 1.4, tc.b * 1.4).clamp()
 
-	# Orientation arrow for TEE and BASKET
-	if (_active_tool == TileType.TEE or _active_tool == TileType.BASKET) and _hover_arrow:
+	# Facing arrow for the tee: where the hole plays (toward its basket / first bend)
+	var tee_facing := tee_facing_for(_hover_cell, _active_hole_num) if _active_tool == TileType.TEE else 0
+	if _active_tool == TileType.TEE and _hover_arrow:
 		_hover_arrow.visible = true
-		var arrow_y := base_y + CELL_HEIGHT + 0.15
-		# Facing offsets: mesh points along -Z by default (orientation 2 = south = +Z requires 180° flip)
-		var rot_y: float
-		var fwd_offset: Vector3
-		match _active_orientation:
-			0: rot_y = 0.0;   fwd_offset = Vector3(0, 0, -CELL_SIZE * 0.7)   # N
-			1: rot_y = -90.0; fwd_offset = Vector3(CELL_SIZE * 0.7, 0, 0)    # E
-			2: rot_y = 180.0; fwd_offset = Vector3(0, 0, CELL_SIZE * 0.7)    # S
-			3: rot_y = 90.0;  fwd_offset = Vector3(-CELL_SIZE * 0.7, 0, 0)   # W
-			_: rot_y = 0.0;   fwd_offset = Vector3.ZERO
-		_hover_arrow.position = Vector3(cell_pos.x + fwd_offset.x, arrow_y, cell_pos.z + fwd_offset.z)
-		_hover_arrow.rotation_degrees = Vector3(0.0, rot_y, 0.0)
+		var arrow_y := base_y + CELL_HEIGHT + 0.2
+		var dir := _facing_vector(tee_facing)
+		_hover_arrow.position = cell_pos + dir * CELL_SIZE * 1.6 + Vector3(0.0, arrow_y - base_y, 0.0)
+		_hover_arrow.scale = Vector3(1.8, 1.0, 1.8)
+		_hover_arrow.rotation = Vector3(0.0, atan2(-dir.x, -dir.z), 0.0)
 
-	# Prop preview — recreate only when tool or cell changes
+	# Prop preview — recreate only when tool, cell or facing changes
 	const PREVIEW_TOOLS := [
 		TileType.TEE, TileType.BASKET, TileType.TREE,
 		TileType.PARKING, TileType.RESTROOM, TileType.FOOD_STAND, TileType.PRO_SHOP,
 	]
 	if not special_tool and _active_tool in PREVIEW_TOOLS:
-		if _hover_cell != _preview_prop_cell or _active_tool != _preview_prop_tool:
+		if _hover_cell != _preview_prop_cell or _active_tool != _preview_prop_tool \
+				or tee_facing != _preview_prop_orient:
 			_clear_preview_prop()
 			_preview_prop_cell = _hover_cell
 			_preview_prop_tool = _active_tool
-			var prop := _prop_for(_active_tool, _hover_cell.x, _hover_cell.y)
+			_preview_prop_orient = tee_facing
+			var prop: Node3D
+			if _active_tool == TileType.TEE:
+				prop = Props.make_tee_pad(tee_facing, _hole_flag_color(_active_hole_num))
+			else:
+				prop = _prop_for(_active_tool, _hover_cell.x, _hover_cell.y)
 			if prop:
 				_apply_preview_transparency(prop)
 				prop.position = Vector3(_hover_cell.x * CELL_SIZE, CELL_HEIGHT * 0.5 + base_y, _hover_cell.y * CELL_SIZE)
@@ -2327,12 +2530,21 @@ func _update_hover() -> void:
 			for gm in _ghost_meshes:
 				if is_instance_valid(gm): (gm as MeshInstance3D).visible = false
 
+## Unit vector a tee orientation points along (0 = -Z, 1 = +X, 2 = +Z, 3 = -X).
+func _facing_vector(o: int) -> Vector3:
+	match o:
+		1: return Vector3(1, 0, 0)
+		2: return Vector3(0, 0, 1)
+		3: return Vector3(-1, 0, 0)
+	return Vector3(0, 0, -1)
+
 func _clear_preview_prop() -> void:
 	if _preview_prop and is_instance_valid(_preview_prop):
 		_preview_prop.queue_free()
 	_preview_prop      = null
 	_preview_prop_cell = Vector2i(-9, -9)
 	_preview_prop_tool = -99
+	_preview_prop_orient = -1
 
 func _apply_preview_transparency(node: Node3D) -> void:
 	if node is MeshInstance3D:
@@ -2359,11 +2571,12 @@ func _apply_preview_transparency(node: Node3D) -> void:
 func _paint_at(cell: Vector2i) -> void:
 	if not _valid(cell):
 		return
+	_stroke_last_cell = cell
 	_clear_preview_prop()   # hide preview while painting
 	if _active_tool == TOOL_RAISE or _active_tool == TOOL_LOWER:
 		_push_undo(cell)
 		if not EconomyManager.spend(TERRAFORM_COST, "construction"):
-			_undo_stack.pop_back()
+			_drop_last_undo(cell)
 			return
 		var step := TERRAFORM_STEP if _active_tool == TOOL_RAISE else -TERRAFORM_STEP
 		var cur := _tile_heights.get(cell, 0.0) as float
@@ -2385,67 +2598,123 @@ func _paint_at(cell: Vector2i) -> void:
 			_rock_overlays.erase(cell)
 		else:
 			if not EconomyManager.spend(TILE_COSTS.get(TileType.ROCK, 0.0) as float, "construction"):
-				_undo_stack.pop_back()
+				_drop_last_undo(cell)
 				return
 			_rock_overlays[cell] = true
 		_update_rock_prop(cell)
-	else:
-		_push_undo(cell)
+	elif _active_tool == TOOL_ERASE:
 		var old_tt: int = _tiles.get(cell, TileType.GRASS) as int
-		# Pro Shop is a 3×3 building — special placement path
-		if _active_tool == TileType.PRO_SHOP:
-			if old_tt != TileType.PRO_SHOP:
-				_try_place_pro_shop(cell)
-			return
-		# Erase pro shop sub-cells if overwriting
 		if old_tt == TileType.PRO_SHOP:
-			var ps_anchor: Vector2i = _building_anchor.get(cell, cell) as Vector2i
-			_erase_pro_shop_building(ps_anchor)
-			old_tt = TileType.GRASS
-		# Charge tile cost (terrain/objects)
-		if TILE_COSTS.has(_active_tool) and old_tt != _active_tool:
-			var cost: float = TILE_COSTS[_active_tool] as float
-			if cost > 0.0 and not EconomyManager.spend(cost, "construction"):
-				return
-		# Charge facility cost (buildings)
-		elif FACILITY_COSTS.has(_active_tool) and old_tt != _active_tool:
-			if not EconomyManager.spend(FACILITY_COSTS[_active_tool], "construction"):
-				return
-		# Painting any non-OB/non-ROCK tile clears those overlays
-		if _ob_zones.has(cell):
-			_ob_zones.erase(cell)
-			_update_ob_prop(cell)
-		if _rock_overlays.has(cell):
-			_rock_overlays.erase(cell)
-			_update_rock_prop(cell)
-		if old_tt == TileType.TREE and _active_tool != TileType.TREE:
-			_tile_variants.erase(cell)
-			_tile_tree_size.erase(cell)
-		if old_tt == TileType.TEE and _active_tool != TileType.TEE:
-			_tile_orientations.erase(cell)
-			_tile_par.erase(cell)
-		_tiles[cell] = _active_tool
-		if _active_tool == TileType.TREE:
-			_tile_variants[cell]   = _active_variant
-			_tile_tree_size[cell]  = _active_tree_size
-		elif _active_tool == TileType.TEE:
-			_tile_hole_num[cell]     = _active_hole_num
-			_tile_orientations[cell] = _active_orientation
-			if not _tile_par.has(cell):
-				_tile_par[cell] = 3
-		elif _active_tool == TileType.BASKET:
-			_tile_hole_num[cell] = _active_hole_num
-		_update_tile_visual(cell, _active_tool, true)
-		cell_changed.emit(cell.x, cell.y, _active_tool)
-		if _active_tool == TileType.TEE or _active_tool == TileType.BASKET:
-			_auto_par(_active_hole_num)
-		if old_tt != _active_tool:
-			EventBus.tile_placed.emit(_active_tool)
-		if _active_tool == TileType.TEE:
-			EventBus.tee_painted.emit(cell, _active_hole_num)
-		if _active_tool == TileType.TEE or _active_tool == TileType.BASKET \
-				or old_tt == TileType.TEE or old_tt == TileType.BASKET:
+			_erase_pro_shop_building(_building_anchor.get(cell, cell) as Vector2i)
+			return
+		if old_tt == TileType.GRASS and not _ob_zones.has(cell) and not _rock_overlays.has(cell):
+			return
+		erase_cell(cell)
+		if old_tt == TileType.TEE or old_tt == TileType.BASKET:
 			draw_route_lines()
+	elif TileType.values().has(_active_tool):
+		_paint_tile(cell, _active_tool)
+
+## Paint one tile with a TileType tool. Ground never replaces an object, and an
+## object never replaces a different object — that's what Erase is for (it was
+## far too easy to wipe out a basket while painting grass).
+func _paint_tile(cell: Vector2i, tool: int) -> void:
+	var old_tt: int = _tiles.get(cell, TileType.GRASS) as int
+	if not GROUND_TILES.has(old_tt) and old_tt != tool:
+		if not _stroke_warned:
+			_stroke_warned = true
+			EventBus.notification_requested.emit(
+				"%s is in the way — use ✕ Erase (or Delete) to remove it first." % _tile_name(old_tt), "warning")
+		return
+	# Pro Shop is a 3×3 building — special placement path
+	if tool == TileType.PRO_SHOP:
+		if old_tt != TileType.PRO_SHOP:
+			_try_place_pro_shop(cell)
+		return
+	# Charge tile cost (terrain/objects)
+	if TILE_COSTS.has(tool) and old_tt != tool:
+		var cost: float = TILE_COSTS[tool] as float
+		if cost > 0.0 and not EconomyManager.spend(cost, "construction"):
+			return
+	# Charge facility cost (buildings)
+	elif FACILITY_COSTS.has(tool) and old_tt != tool:
+		if not EconomyManager.spend(FACILITY_COSTS[tool], "construction"):
+			return
+	_push_undo(cell)
+	# A hole has one tee and one basket: placing another moves it here.
+	if tool == TileType.TEE or tool == TileType.BASKET:
+		for other in _cells_of_hole(tool, _active_hole_num):
+			if other != cell:
+				erase_cell(other as Vector2i)
+	# Painting any non-OB/non-ROCK tile clears those overlays
+	if _ob_zones.has(cell):
+		_ob_zones.erase(cell)
+		_update_ob_prop(cell)
+	if _rock_overlays.has(cell):
+		_rock_overlays.erase(cell)
+		_update_rock_prop(cell)
+	if old_tt == TileType.TREE and tool != TileType.TREE:
+		_tile_variants.erase(cell)
+		_tile_tree_size.erase(cell)
+	if old_tt == TileType.TEE and tool != TileType.TEE:
+		_tile_orientations.erase(cell)
+		_tile_par.erase(cell)
+	_tiles[cell] = tool
+	if tool == TileType.TREE:
+		_tile_variants[cell]   = _active_variant
+		_tile_tree_size[cell]  = _active_tree_size
+	elif tool == TileType.TEE:
+		_tile_hole_num[cell]     = _active_hole_num
+		_tile_orientations[cell] = tee_facing_for(cell, _active_hole_num)
+		if not _tile_par.has(cell):
+			_tile_par[cell] = 3
+	elif tool == TileType.BASKET:
+		_tile_hole_num[cell] = _active_hole_num
+	_update_tile_visual(cell, tool, true)
+	cell_changed.emit(cell.x, cell.y, tool)
+	if tool == TileType.BASKET:
+		_aim_tee_at_basket(_active_hole_num)
+	if tool == TileType.TEE or tool == TileType.BASKET:
+		_auto_par(_active_hole_num)
+	if old_tt != tool:
+		EventBus.tile_placed.emit(tool)
+	if tool == TileType.TEE:
+		EventBus.tee_painted.emit(cell, _active_hole_num)
+	if tool == TileType.TEE or tool == TileType.BASKET \
+			or old_tt == TileType.TEE or old_tt == TileType.BASKET:
+		draw_route_lines()
+
+func _tile_name(tt: int) -> String:
+	var n: String = TileType.find_key(tt) if TileType.values().has(tt) else "That"
+	return n.replace("_", " ").capitalize()
+
+## Cells holding a tee/basket for one hole.
+func _cells_of_hole(tt: int, hole_num: int) -> Array:
+	var out: Array = []
+	for c in _cells_by_type().get(tt, []):
+		if (_tile_hole_num.get(c, 1) as int) == hole_num:
+			out.append(c)
+	return out
+
+## Which way a tee placed at `cell` should face: toward the hole's first bend
+## (route waypoint) or its basket. Falls back to the manual N/E/S/W choice.
+func tee_facing_for(cell: Vector2i, hole_num: int) -> int:
+	var wps: Array = _hole_waypoints.get(hole_num, []) as Array
+	if not wps.is_empty():
+		return _orientation_toward(cell, wps[0] as Vector2i)
+	for b in _cells_of_hole(TileType.BASKET, hole_num):
+		if b != cell:
+			return _orientation_toward(cell, b as Vector2i)
+	return _active_orientation
+
+## Turn a hole's tee to face its basket (or first bend).
+func _aim_tee_at_basket(hole_num: int) -> void:
+	for t in _cells_of_hole(TileType.TEE, hole_num):
+		var tc := t as Vector2i
+		var o := tee_facing_for(tc, hole_num)
+		if o != (_tile_orientations.get(tc, -1) as int):
+			_tile_orientations[tc] = o
+			_update_tile_visual(tc, TileType.TEE, false)
 
 func _update_tile_visual(key: Vector2i, tt: int, rebuild_water: bool = true) -> void:
 	var world_y := _get_tile_world_y(key, tt)
@@ -2625,6 +2894,9 @@ func _update_rock_prop(cell: Vector2i) -> void:
 
 ## ── Undo ──────────────────────────────────────────────────────────────────────
 
+## Undo history is a stack of groups — one per paint stroke / move / erase —
+## so Ctrl/⌘+Z takes back a whole drag at once. Each group remembers a cell's
+## state from before the group first touched it.
 func _push_undo(cell: Vector2i) -> void:
 	var entry := {
 		"cell":        cell,
@@ -2638,9 +2910,38 @@ func _push_undo(cell: Vector2i) -> void:
 		"ob_zone":     _ob_zones.get(cell, -1),
 		"rock":        _rock_overlays.has(cell),
 	}
-	_undo_stack.push_back(entry)
+	var gid := _stroke_id if _stroke_id >= 0 else -1
+	if gid >= 0 and not _undo_stack.is_empty() and (_undo_stack.back()["id"] as int) == gid:
+		var group: Dictionary = _undo_stack.back()
+		if not (group["cells"] as Dictionary).has(cell):
+			(group["cells"] as Dictionary)[cell] = true
+			(group["entries"] as Array).append(entry)
+		return
+	_undo_stack.push_back({"id": gid, "entries": [entry], "cells": {cell: true}})
 	if _undo_stack.size() > UNDO_MAX:
 		_undo_stack.pop_front()
+
+## Take back the entry just pushed for `cell` (e.g. the purchase failed).
+func _drop_last_undo(cell: Vector2i) -> void:
+	if _undo_stack.is_empty():
+		return
+	var group: Dictionary = _undo_stack.back()
+	var entries: Array = group["entries"]
+	if not entries.is_empty() and Vector2i(entries.back()["cell"]) == cell:
+		entries.pop_back()
+		(group["cells"] as Dictionary).erase(cell)
+	if entries.is_empty():
+		_undo_stack.pop_back()
+
+## Group several edits (outside a mouse stroke) into one undo step.
+func begin_undo_group() -> void:
+	_begin_stroke()
+
+func end_undo_group() -> void:
+	_end_stroke()
+
+func get_undo_depth() -> int:
+	return _undo_stack.size()
 
 func get_hover_cell() -> Vector2i:
 	return _hover_cell
@@ -2714,32 +3015,59 @@ func erase_cell(cell: Vector2i) -> void:
 	if not _valid(cell):
 		return
 	_push_undo(cell)
+	var old_tt: int = _tiles.get(cell, TileType.GRASS) as int
 	_tiles[cell] = TileType.GRASS
+	_tile_hole_num.erase(cell)
+	_tile_orientations.erase(cell)
+	_tile_par.erase(cell)
+	_tile_variants.erase(cell)
+	_tile_tree_size.erase(cell)
+	_facility_orientations.erase(cell)
+	_facility_colors.erase(cell)
 	_ob_zones.erase(cell)
 	_rock_overlays.erase(cell)
 	_update_ob_prop(cell)
 	_update_rock_prop(cell)
 	_update_tile_visual(cell, TileType.GRASS, true)
+	if old_tt != TileType.GRASS:
+		cell_changed.emit(cell.x, cell.y, TileType.GRASS)
 
 func undo_paint() -> void:
 	if _undo_stack.is_empty():
 		EventBus.notification_requested.emit("Nothing to undo", "info")
 		return
-	var entry: Dictionary = _undo_stack.pop_back()
-	var cell: Vector2i = Vector2i(entry["cell"])
-	# 50% refund for whatever is currently painted here
-	var current_tt: int = _tiles.get(cell, TileType.GRASS) as int
+	var group: Dictionary = _undo_stack.pop_back()
+	var entries: Array = group["entries"]
 	var refund := 0.0
-	if TILE_COSTS.has(current_tt):
-		refund = (TILE_COSTS[current_tt] as float) * 0.5
-	elif FACILITY_COSTS.has(current_tt):
-		refund = (FACILITY_COSTS[current_tt] as float) * 0.5
-	# Rock overlay placed on top gets a partial refund too
-	if _rock_overlays.has(cell) and not (entry["rock"] as bool):
-		refund += (TILE_COSTS.get(TileType.ROCK, 0.0) as float) * 0.5
+	var touched_holes := false
+	for i in range(entries.size() - 1, -1, -1):
+		var r := _undo_entry(entries[i] as Dictionary)
+		refund += r
+	for e in entries:
+		var t: int = (e as Dictionary)["tile"] as int
+		var c := Vector2i((e as Dictionary)["cell"])
+		var now: int = _tiles.get(c, TileType.GRASS) as int
+		if t == TileType.TEE or t == TileType.BASKET or now == TileType.TEE or now == TileType.BASKET:
+			touched_holes = true
 	if refund > 0.0:
 		EconomyManager.earn(refund, "refund")
 		EventBus.notification_requested.emit("Undo — refunded $%.0f" % refund, "info")
+	if touched_holes and _builder_mode:
+		draw_route_lines()
+
+## Restore one cell; returns the refund (50% of whatever was painted there).
+func _undo_entry(entry: Dictionary) -> float:
+	var cell: Vector2i = Vector2i(entry["cell"])
+	var current_tt: int = _tiles.get(cell, TileType.GRASS) as int
+	var refund := 0.0
+	if current_tt != (entry["tile"] as int):
+		if TILE_COSTS.has(current_tt):
+			refund = (TILE_COSTS[current_tt] as float) * 0.5
+		elif FACILITY_COSTS.has(current_tt):
+			refund = (FACILITY_COSTS[current_tt] as float) * 0.5
+	# Rock overlay placed on top gets a partial refund too
+	if _rock_overlays.has(cell) and not (entry["rock"] as bool):
+		refund += (TILE_COSTS.get(TileType.ROCK, 0.0) as float) * 0.5
 	var old_tt: int = entry["tile"] as int
 	_tiles[cell] = old_tt
 	var h: float = entry["height"] as float
@@ -2768,6 +3096,7 @@ func undo_paint() -> void:
 	else: _rock_overlays.erase(cell)
 	_update_rock_prop(cell)
 	_update_tile_visual(cell, old_tt, true)
+	return refund
 
 func _respawn_existing_staff() -> void:
 	for type in 3:
@@ -3095,28 +3424,44 @@ func find_walkable_path(from_pos: Vector3, to_pos: Vector3) -> Array:
 			return [to_pos]
 	return _cells_to_world(_string_pull(cells))
 
-# Bresenham LOS: true when no non-walkable cell crosses the line from a to b.
+## Line of sight for walking: true when every cell the straight segment a→b
+## touches is walkable (same grid as the BFS). Supercover traversal — the old
+## Bresenham line stepped diagonally between cells, so NPCs cut across water
+## corners and narrow water channels. Where the line passes exactly through a
+## cell corner both side cells must be clear (no squeezing between two ponds).
+## The start and end cells themselves aren't tested (that's where the NPC
+## stands / where its disc lies).
 func _los_clear(a: Vector2i, b: Vector2i) -> bool:
-	const WALKABLE := {
-		TileType.GRASS: true, TileType.FAIRWAY: true, TileType.PATH: true,
-		TileType.ROUGH: true, TileType.TEE: true, TileType.BASKET: true,
-		TileType.ENTRANCE: true, TileType.SAND: true, TileType.PARKING: true,
-		TileType.RESTROOM: true, TileType.FOOD_STAND: true, TileType.PRO_SHOP: true,
-	}
-	var dx := absi(b.x - a.x)
-	var dz := absi(b.y - a.y)
-	var sx := 1 if b.x > a.x else -1
-	var sz := 1 if b.y > a.y else -1
-	var err := dx - dz
-	var cx := a.x;  var cz := a.y
-	while cx != b.x or cz != b.y:
-		var cell := Vector2i(cx, cz)
-		if not _valid(cell) or not WALKABLE.has(_tiles.get(cell, TileType.WATER) as int):
+	if a == b:
+		return true
+	var grid := _walk_grid()
+	var nx := absi(b.x - a.x)
+	var ny := absi(b.y - a.y)
+	var sx := signi(b.x - a.x)
+	var sy := signi(b.y - a.y)
+	var x := a.x
+	var y := a.y
+	var ix := 0
+	var iy := 0
+	while ix < nx or iy < ny:
+		var lhs := (1 + 2 * ix) * ny
+		var rhs := (1 + 2 * iy) * nx
+		if lhs == rhs:
+			if not _walk_ok(grid, Vector2i(x + sx, y)) or not _walk_ok(grid, Vector2i(x, y + sy)):
+				return false
+			x += sx; y += sy; ix += 1; iy += 1
+		elif lhs < rhs:
+			x += sx; ix += 1
+		else:
+			y += sy; iy += 1
+		if (x != b.x or y != b.y) and not _walk_ok(grid, Vector2i(x, y)):
 			return false
-		var e2 := err * 2
-		if e2 > -dz: err -= dz; cx += sx
-		if e2 <  dx: err += dx; cz += sz
 	return true
+
+func _walk_ok(grid: PackedByteArray, c: Vector2i) -> bool:
+	if c.x < 0 or c.y < 0 or c.x >= GRID_COLS or c.y >= GRID_ROWS:
+		return false
+	return grid[c.x * GRID_ROWS + c.y] == 1
 
 # String-pull: skip BFS waypoints whose LOS is already clear from the previous kept point.
 func _string_pull(cells: Array) -> Array:
@@ -3195,6 +3540,7 @@ func _remap_v2i(d: Dictionary) -> Dictionary:
 
 ## Restore course state from a snapshot; restarts NPC system if in gameplay mode.
 func import_full_state(state: Dictionary) -> void:
+	_undo_stack.clear()   # history belongs to the layout being replaced
 	var was_playing := _gameplay_mode
 	if was_playing:
 		set_gameplay_mode(false)
@@ -3222,6 +3568,7 @@ func import_full_state(state: Dictionary) -> void:
 
 ## Wipe all tile data and visuals (used before applying a fresh course preset).
 func clear_all_tiles() -> void:
+	_undo_stack.clear()   # history belongs to the layout being replaced
 	var was_playing := _gameplay_mode
 	if was_playing:
 		set_gameplay_mode(false)
@@ -3277,6 +3624,7 @@ func _clear_tile_visuals() -> void:
 ## tile_map: { Vector2i → TileType int } covering the full grid.
 ## Skips TEE/BASKET/ENTRANCE tiles — those are placed manually after.
 func load_terrain_preset(tile_map: Dictionary) -> void:
+	_undo_stack.clear()   # history belongs to the layout being replaced
 	const SKIP_TYPES := [TileType.TEE, TileType.BASKET, TileType.ENTRANCE, TileType.PRO_SHOP]
 	var normalized := _remap_v2i(tile_map)
 	for cell: Vector2i in normalized:

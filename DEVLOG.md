@@ -4,6 +4,33 @@ Running record of what exists, what was built each session, and what's next. Upd
 
 ---
 
+## Current State (2026-11-25, part 2) — scrolling menus + update checker
+
+- **Menus scroll again.** `Gameplay._input()` swallowed every mouse-wheel event whenever an overlay was open, so no overlay could scroll. The Concessions Worker hire button sits below the fold in Staff, so it looked like you couldn't hire one. Blocker removed, checked before/after with a real-window probe. Scrollbars are now visible (the theme had 0-width styleboxes). The builder bottom bar no longer runs 8 px off-screen.
+- **Update checker:** new `UpdateChecker` autoload. Once per launch it checks the latest GitHub release (`ktraab/flyte`). There's a Settings → Updates tab (auto toggle, Check now, Download), plus a main-menu "Update available" button and a toast. It never self-installs; Download opens the release page. `project.godot` now has `config/version="1.0.0"`. **Bump it with each release.** v1.0 players won't see this until they install v1.1 once by hand.
+- Tests: new `tests/test_ui.gd` (5 tests); 132/132 pass.
+
+## Current State (2026-11-25) — playtest feedback: builder safety + controls
+
+- **Painting never deletes objects.** Ground tools (grass, fairway, path, water, rough, sand) skip tees, baskets, trees, facilities and decor; an object tool won't replace a different object. A warning toast appears once per stroke. Only **✕ Erase** (now its own tool, `GameWorld3D.TOOL_ERASE = 19`) or the Delete key removes objects.
+- **Undo:** ⌘Z works on Mac (`is_command_or_control_pressed`). Undo history is grouped, so one drag, move or erase is one undo step (`begin_undo_group`/`end_undo_group`). History clears when the layout is replaced. Builder hotkeys are ignored while the builder is hidden; Delete/Backspace used to erase cells from gameplay.
+- **Select tool:** fixed the root bug. Re-entering the builder with Select active told the world to paint tile id 18, which wiped whatever you clicked. Unknown tool ids now paint nothing. Click selects any object (trees show their size). A drag only starts after 10 px of travel, and `move_object()` refuses to drop onto another object, leaves terrain height in place and is undoable. The Pro Shop can't be dragged.
+- **Tee facing:** a tee auto-faces its basket (or the first route bend) and re-aims when the basket or route moves. The hover preview shows the real facing with a flat arrow. R / Shift+R rotates. Placing a hole's tee or basket again moves it (one per hole), and tee/basket/decor/facility tools place once per click (`SINGLE_PLACE_TOOLS`).
+- **Route waypoints:** Edit Waypoints shows with the Tee/Basket tool (for the active hole), not only via Select. Clicking adds a bend where it fits best; you can drag a dot to move it, or click it to remove it.
+- **NPCs vs water:** `_los_clear` now does a supercover walk over the BFS walk grid. The old Bresenham line skipped diagonal corners, so NPCs cut across ponds.
+- **Camera:** drag the map with right or middle mouse anywhere, or left mouse in gameplay (6 px threshold, so clicks still inspect NPCs). See `CourseCamera3D.drag_pan()`.
+- **Play-area edge:** outside ground is a darker, muted green (`OUTSIDE_GROUND_COLOR`), with a chalk boundary line around the grid.
+- Boot already lands on the main menu; the story starts on the first Play (verified with a screenshot).
+- Tests: new `tests/test_builder.gd` (11 tests); 127/127 pass.
+
+## Released (2026-11-22) — v1.0 is public
+
+- **Public repo:** https://github.com/ktraab/flyte. Single fresh commit, so the old unlicensed basket in this repo's history isn't published. It's authored with the GitHub noreply address.
+- **Release v1.0.0:** Windows (82 MB), macOS (109 MB) and Linux (73 MB) zips, plus install notes for the unsigned-app warnings. The macOS build was smoke-tested.
+- **This repo stays the working repo.** To publish an update: `git archive HEAD` → commit into a clone of ktraab/flyte → push, rebuild the zips, then `gh release create`.
+
+---
+
 ## Current State (2026-11-21, part 11) — playthrough design fixes
 
 All 4 recommendations accepted by the user:

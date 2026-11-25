@@ -97,7 +97,8 @@ layout_mode = 1
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -104.0
+offset_top = -112.0
+grow_vertical = 0
 theme_override_styles/panel = SubResource("SBF_bar")
 
 [node name="BarMargin" type="MarginContainer" parent="BottomBar"]
@@ -353,7 +354,7 @@ layout_mode = 1
 anchor_bottom = 1.0
 offset_top = 52.0
 offset_right = 210.0
-offset_bottom = -104.0
+offset_bottom = -112.0
 theme_override_styles/panel = SubResource("SBF_panel")
 
 [node name="StatsMargin" type="MarginContainer" parent="LeftStatsPanel"]
@@ -405,7 +406,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -220.0
 offset_top = 52.0
-offset_bottom = -104.0
+offset_bottom = -112.0
 grow_horizontal = 0
 theme_override_styles/panel = SubResource("SBF_panel")
 

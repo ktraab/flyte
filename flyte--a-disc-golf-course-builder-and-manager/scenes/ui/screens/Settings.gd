@@ -27,11 +27,17 @@ var _auto_check: CheckButton = null       # built in code (auto-lower when slow)
 var _access_built  := false
 var _scale_option:    OptionButton = null
 var _colorblind_opt:  OptionButton = null
+var _updates_built := false
+var _upd_status: Label = null
+var _upd_auto: CheckButton = null
+var _upd_check_btn: Button = null
+var _upd_dl_btn: Button = null
 
 func on_screen_entered(_params: Dictionary = {}) -> void:
 	_sync_sliders_from_buses()
 	_sync_graphics_ui()
 	_build_accessibility_tab()
+	_build_updates_tab()
 
 func on_screen_exited() -> void:
 	pass
@@ -324,3 +330,76 @@ func _on_scale_selected(idx: int) -> void:
 
 func _on_colorblind_selected(idx: int) -> void:
 	GameManager.apply_colorblind_mode(idx)
+
+# ── Updates tab (built programmatically) ──────────────────────────────────────
+
+func _build_updates_tab() -> void:
+	if _updates_built:
+		_sync_updates_ui()
+		return
+	_updates_built = true
+	var tab_container := $CenterBox/Panel/Margin/MainVBox/TabContainer as TabContainer
+	if not tab_container:
+		return
+	var margin := MarginContainer.new()
+	margin.name = "Updates"
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 16)
+	tab_container.add_child(margin)
+	var inner := VBoxContainer.new()
+	inner.add_theme_constant_override("separation", 14)
+	margin.add_child(inner)
+
+	var ver := Label.new()
+	ver.text = "You have Flyte v%s" % UpdateChecker.current_version()
+	ver.add_theme_font_size_override("font_size", 14)
+	inner.add_child(ver)
+
+	var auto_row := HBoxContainer.new()
+	auto_row.add_theme_constant_override("separation", 10)
+	inner.add_child(auto_row)
+	var auto_lbl := Label.new()
+	auto_lbl.text = "Check for updates automatically"
+	auto_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	auto_row.add_child(auto_lbl)
+	_upd_auto = CheckButton.new()
+	_upd_auto.toggled.connect(func(on: bool) -> void: UpdateChecker.set_auto_check(on))
+	auto_row.add_child(_upd_auto)
+
+	var desc := Label.new()
+	desc.text = "Once per launch Flyte asks GitHub whether a newer release exists. Nothing is downloaded or installed for you — Download opens the release page."
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+	desc.add_theme_font_size_override("font_size", 11)
+	inner.add_child(desc)
+
+	var btn_row := HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 10)
+	inner.add_child(btn_row)
+	_upd_check_btn = Button.new()
+	_upd_check_btn.text = "Check now"
+	_upd_check_btn.custom_minimum_size = Vector2(140, 40)
+	_upd_check_btn.pressed.connect(func() -> void: UpdateChecker.check_now(true))
+	btn_row.add_child(_upd_check_btn)
+	_upd_dl_btn = Button.new()
+	_upd_dl_btn.text = "Download"
+	_upd_dl_btn.custom_minimum_size = Vector2(140, 40)
+	_upd_dl_btn.pressed.connect(func() -> void: UpdateChecker.open_download())
+	btn_row.add_child(_upd_dl_btn)
+
+	_upd_status = Label.new()
+	_upd_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	inner.add_child(_upd_status)
+
+	UpdateChecker.status_changed.connect(func(_s: String) -> void: _sync_updates_ui())
+	_sync_updates_ui()
+
+func _sync_updates_ui() -> void:
+	if _upd_auto:
+		_upd_auto.set_pressed_no_signal(UpdateChecker.auto_check)
+	if _upd_status:
+		_upd_status.text = UpdateChecker.status_text()
+	if _upd_check_btn:
+		_upd_check_btn.disabled = UpdateChecker.status == "checking"
+	if _upd_dl_btn:
+		_upd_dl_btn.visible = UpdateChecker.status == "available"
